@@ -8,4 +8,6 @@ class PlayerStats( xmlData: scala.xml.Elem) {
  	def attributeValueEquals(value: String)(node: scala.xml.Node) = {
 	     node.attributes.exists(_.value == value)
 	}
+
+	override def toString =   xmlData.toString
 }
