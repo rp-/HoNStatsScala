@@ -1,12 +1,14 @@
 package com.oldsch00l.libHoN;
 
-import scala.xml._;
-
 object Tester {
 	def main(args : Array[String]) : Unit = {
 		val erpe = StatsFactory.getPlayerStats( "erpe")
-		val wins = erpe.attribute( "acc_wins");
-  
-		println( erpe );
+		val wins = erpe.attribute( StatsFactory.PlayerAttr.WINS);
+        val aid = erpe.getAID;
+
+        println( erpe );
+		println( wins );
+        println( erpe.attribute( StatsFactory.PlayerAttr.GAMES_PLAYED) );
+        println( aid )
   	}
 }
