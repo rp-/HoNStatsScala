@@ -1,11 +1,12 @@
 package com.oldsch00l.libHoN;
 
-object Tester {
-  def main(args : Array[String]) : Unit = {
+object Tester extends App {
     //val erpe = StatsFactory.getPlayerStatsByAid( (2500 to 2600).toList)
-    val erpe = StatsFactory.getPlayerStatsByNick( List("Erpe", "Sandla"))
-    erpe.foreach( p => println( p.attribute(PlayerAttr.NICKNAME) + "(" + p.getAID + ") = " + p.attribute( PlayerAttr.GAMES_PLAYED)))
-    println( "list size: " + erpe.length)
+    val pllist = StatsFactory.getPlayerStatsByNick( List("Erpe", "Sandla"));
+
+    val erpe : PlayerStats = pllist(0);
+    pllist.foreach( p => println( p.attribute(PlayerAttr.NICKNAME) + "(" + p.getAID + ") = " + p.attribute( PlayerAttr.GAMES_PLAYED)))
+    println( "list size: " + pllist.length)
 
 /*    if( erpe != Nil) {
       val wins = erpe(0).attribute( PlayerAttr.WINS);
@@ -16,5 +17,4 @@ object Tester {
       println( erpe(0).attribute( PlayerAttr.GAMES_PLAYED) );
       println( aid )
     }*/
-  }
 }

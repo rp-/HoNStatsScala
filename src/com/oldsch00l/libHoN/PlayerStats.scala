@@ -2,11 +2,11 @@ package com.oldsch00l.libHoN
 
 class PlayerStats( xmlData: scala.xml.Node) {
   def attribute( name: String) : String = {
-    (xmlData \ "stat").filter( attributeValueEquals( name)).text
+    (xmlData \ "stat").filter( attributeNameValueEquals( name)).text
   }
  
-  def attributeValueEquals(value: String)(node: scala.xml.Node) = {
-     node.attributes.exists(_.value == value)
+  def attributeNameValueEquals(value: String)(node: scala.xml.Node) = {
+    (node \ "@name").toString == value
   }
 
   def getAID : String = xmlData.attribute( "aid").get.text;
