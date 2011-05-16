@@ -35,4 +35,22 @@ object StatsFactory {
       Nil
 
   }
+
+  def getMatchStatsByMatchId( ids : List[Int]) : List[MatchStats] = {
+    val query = ids.take(50).mkString( "&mid[]=");
+    val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
+    if( (xmlData \\ "match").length > 0 ) {
+      val ret = (for { match_ <- (xmlData \\ "match") } yield new MatchStats(match_)).toList;
+
+      if( ids.length > 50)
+        ret ::: getMatchStatsByMatchId( ids.drop(50))
+      else
+        ret
+    }
+    else
+    {
+      assert(false)
+      Nil
+    }
+  }
 }

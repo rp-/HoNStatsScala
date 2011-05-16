@@ -1,17 +1,26 @@
 package com.oldsch00l.libHoN
 
-class PlayerStats( xmlData: scala.xml.Node) {
+import scala.xml._;
+
+class PlayerStats( playerData: scala.xml.Node) {
   def attribute( name: String) : String = {
-    (xmlData \ "stat").filter( attributeNameValueEquals( name)).text
+    (playerData \ "stat").filter( attributeNameValueEquals( name)).text
   }
  
   def attributeNameValueEquals(value: String)(node: scala.xml.Node) = {
     (node \ "@name").toString == value
   }
 
-  def getAID : String = xmlData.attribute( "aid").get.text;
+  def getAID : String = playerData.attribute( "aid").get.text;
 
-  override def toString =   xmlData.toString
+  def getPlayedMatches() : List[MatchStats] = {
+    val xmlData = XML.load(StatsFactory.XMLRequester + "?f=public_history&opt=aid&aid[]=" + getAID)
+    assert(xmlData != Nil)
+    val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
+    StatsFactory.getMatchStatsByMatchId(mids)
+  }
+
+  override def toString =   playerData.toString
 }
 
 object PlayerAttr {
