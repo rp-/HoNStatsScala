@@ -75,4 +75,5 @@ object PlayerAttr {
   val AP = "AP";
   val APEM = "APEM";
   val LEVEL = "level";
+  val RANK_AMM_TEAM_RATING = "rnk_amm_team_rating";
 }
