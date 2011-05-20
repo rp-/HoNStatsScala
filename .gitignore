@@ -1,3 +1,5 @@
 build/
 .manager/
 bin/
+derbyDBstats/
+derby.log
