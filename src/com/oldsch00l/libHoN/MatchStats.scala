@@ -17,7 +17,7 @@ class MatchStats(MatchID: Int, matchData: scala.xml.Node) {
   }
 
   def cacheEntry(conn: java.sql.Connection) = {
-    if (!isCached(conn)) {
+    //if (!isCached(conn)) {
       val query = "INSERT INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
       val ps = conn.prepareStatement(query)
       ps.setInt(1, MatchID)
@@ -30,7 +30,7 @@ class MatchStats(MatchID: Int, matchData: scala.xml.Node) {
         }
       }
       ps.close
-    }
+    //}
   }
 }
 
