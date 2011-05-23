@@ -54,16 +54,13 @@ object StatsFactory {
         val ret = (for { match_ <- (xmlData \\ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_)).toList;
 
         ret.foreach(m => m.cacheEntry(connection))
-        if (ids.length > 50)
-          ret ::: getMatchStatsByMatchId(ids.drop(50))
-        else
-          ret
+        return cached ::: ret ::: getMatchStatsByMatchId(ids.drop(50))
       } else {
         assert(false)
-        Nil
+        return Nil
       }
     } else
-      cached ::: getMatchStatsByMatchId(ids.drop(50))
+      return cached ::: getMatchStatsByMatchId(ids.drop(50))
   }
 
   def dispose = {
