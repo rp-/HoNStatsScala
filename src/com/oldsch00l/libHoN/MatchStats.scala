@@ -2,7 +2,7 @@ package com.oldsch00l.libHoN
 
 import java.sql._;
 
-class MatchStats(MatchID: Int, matchData: scala.xml.Node) {
+class MatchStats(MatchID: Int, matchData: String) {
   require(MatchID.isValidInt)
   override def toString = matchData.toString
   def getMatchID = this.MatchID
@@ -54,7 +54,7 @@ object MatchStatsSql {
       val s = conn.createStatement
       val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ")"
       SQLHelper.queryEach(conn, query) { rs =>
-        new MatchStats(rs.getInt("mid"), scala.xml.XML.loadString(rs.getString("xmlData")))
+        new MatchStats(rs.getInt("mid"), rs.getString("xmlData"))
       }
     } else
       Nil

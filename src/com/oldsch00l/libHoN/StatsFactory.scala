@@ -44,23 +44,22 @@ object StatsFactory {
     if (ids.size == 0)
       return Nil
 
-    val id50 = ids.take(50)
-    val cached = MatchStatsSql.getEntries(connection, id50)
-    val qids = id50 -- (for { c <- cached } yield c.getMatchID)
-    val query = qids.mkString("&mid[]=");
-    if (qids.size > 0) {
-      val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
-      if ((xmlData \\ "match").length > 0) {
-        val ret = (for { match_ <- (xmlData \\ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_)).toList;
+    val cached = MatchStatsSql.getEntries(connection, ids)
+    val fetchids = ids -- (for { c <- cached } yield c.getMatchID)
+    return cached ::: fetchMachStats(fetchids)
+  }
 
-        ret.foreach(m => m.cacheEntry(connection))
-        return cached ::: ret ::: getMatchStatsByMatchId(ids.drop(50))
-      } else {
-        assert(false)
-        return Nil
-      }
-    } else
-      return cached ::: getMatchStatsByMatchId(ids.drop(50))
+  private def fetchMachStats(ids: List[Int]): List[MatchStats] = {
+    if (ids.size == 0)
+      return Nil
+
+    val qids = ids.take(50)
+    val query = qids.mkString("&mid[]=");
+    val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
+    val ret = (for { match_ <- (xmlData \\ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList;
+
+    ret.foreach(m => m.cacheEntry(connection))
+    return ret ::: fetchMachStats(ids.drop(50))
   }
 
   def dispose = {
