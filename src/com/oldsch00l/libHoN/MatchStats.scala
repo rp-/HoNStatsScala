@@ -43,7 +43,7 @@ object MatchStatsSql {
       query.execute(
         """CREATE TABLE MATCHSTATS (
              mid integer primary key,
-             xmlData LONG VARCHAR
+             xmlData CLOB(32k)
            )""")
       query close
     }

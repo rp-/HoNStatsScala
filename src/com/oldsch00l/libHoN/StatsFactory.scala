@@ -6,8 +6,8 @@ import java.sql.{ Connection, DriverManager, ResultSet };
 object StatsFactory {
   val XMLRequester = "http://xml.heroesofnewerth.com/xml_requester.php"
   //load db driver
-  Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance
-  val connection = DriverManager.getConnection("jdbc:derby:derbyDBstats;create=true")
+  Class.forName("org.hsqldb.jdbc.JDBCDriver").newInstance
+  val connection = DriverManager.getConnection("jdbc:hsqldb:file:statsdb", "SA", "")
   MatchStatsSql.createTable(connection)
 
   def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
