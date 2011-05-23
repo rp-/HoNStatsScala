@@ -17,7 +17,9 @@ class PlayerStats( playerData: scala.xml.Node) {
     val xmlData = XML.load(StatsFactory.XMLRequester + "?f=public_history&opt=aid&aid[]=" + getAID)
     assert(xmlData != Nil)
     val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
-    StatsFactory.getMatchStatsByMatchId(mids)
+    val matches = StatsFactory.getMatchStatsByMatchId(mids)
+    assert(matches.size == mids.size)
+    matches
   }
 
   override def toString =   playerData.toString
