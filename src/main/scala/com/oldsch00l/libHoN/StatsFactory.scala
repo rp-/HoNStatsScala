@@ -45,7 +45,7 @@ object StatsFactory {
       return Nil
 
     val cached = MatchStatsSql.getEntries(connection, ids)
-    val fetchids = ids -- (for { c <- cached } yield c.getMatchID)
+    val fetchids = ids filterNot ((for { c <- cached } yield c.getMatchID) contains)
     return cached ::: fetchMachStats(fetchids)
   }
 
@@ -53,13 +53,13 @@ object StatsFactory {
     if (ids.size == 0)
       return Nil
 
-    val qids = ids.take(50)
+    val qids = ids.take(1)
     val query = qids.mkString("&mid[]=");
     val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
     val ret = (for { match_ <- (xmlData \\ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList;
 
     ret.foreach(m => m.cacheEntry(connection))
-    return ret ::: fetchMachStats(ids.drop(50))
+    return ret ::: fetchMachStats(ids.drop(1))
   }
 
   def dispose = {
