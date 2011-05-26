@@ -59,8 +59,16 @@ object StatsFactory extends Actor {
       workers.foreach(w => w.start)
 
       var curWorker = 0
-      for (id <- fetchids) {
-        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + id)
+      def createQueryList(ids: List[Int]): List[String] = ids match {
+        case List() => List()
+        case x => {
+          val qSize = 1
+          x.take(qSize).mkString("&mid[]=") :: createQueryList(x.drop(qSize))
+        }
+      }
+
+      for (query <- createQueryList(fetchids)) {
+        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
         curWorker += 1
         if (curWorker == workers.size)
           curWorker = 0
