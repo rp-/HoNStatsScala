@@ -1,4 +1,4 @@
-package com.oldsch00l.libHoN
+package libHoN
 
 import scala.xml._;
 
