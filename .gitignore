@@ -1,7 +1,7 @@
-build/
+/build/
 .manager/
-bin/
-target/
+/bin/
+/target/
 lib_managed/
 src_managed/
 project/boot/
