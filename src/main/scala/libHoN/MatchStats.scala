@@ -52,7 +52,7 @@ object MatchStatsSql {
   def getEntries(conn: java.sql.Connection, mid: List[Int]) = {
     if (mid.size > 0) {
       val s = conn.createStatement
-      val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ")"
+      val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ") ORDER BY mid"
       SQLHelper.queryEach(conn, query) { rs =>
         new MatchStats(rs.getInt("mid"), rs.getString("xmlData"))
       }
