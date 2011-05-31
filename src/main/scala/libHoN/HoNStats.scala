@@ -39,7 +39,7 @@ object HoNStats extends App {
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)
             for (outmatch <- showmatches) {
-	            println(" * mid: %d\t\tKDA(%d/%d/%d)".format(
+	            println(" * mid: %d; KDA(%d/%d/%d)".format(
 	                outmatch.getMatchID,
 	                outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
 	                outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
