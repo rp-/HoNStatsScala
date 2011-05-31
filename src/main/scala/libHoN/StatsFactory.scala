@@ -32,7 +32,7 @@ object StatsFactory extends Actor {
     val query = aids.take(50).mkString("&aid[]=");
     val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=aid&aid[]=" + query)
     if (xmlData.child.exists(_.label == "player_stats")) {
-      val ret = (for { player <- (xmlData \\ "player_stats") } yield new PlayerStats(player)).toList;
+      val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
 
       if (aids.length > 50)
         ret ::: getPlayerStatsByAid(aids.drop(50))
@@ -44,14 +44,14 @@ object StatsFactory extends Actor {
   }
 
   def getMatchStatsByMatchId(ids: List[Int]): List[MatchStats] = {
-    if (ids.size == 0)
+    if (ids.isEmpty)
       return Nil
 
     val cached = MatchStatsSql.getEntries(connection, ids)
     val fetchids = ids filterNot ((for { c <- cached } yield c.getMatchID) contains)
 
     m_results = Nil
-    if (fetchids.size > 0) {
+    if (!fetchids.isEmpty) {
       println("tofetch: " + fetchids.size)
       val workers = for (n <- 0 until 10) yield new WorkerActor
 
