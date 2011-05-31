@@ -52,7 +52,7 @@ object StatsFactory extends Actor {
 
     m_results = Nil
     if (!fetchids.isEmpty) {
-      println("tofetch: " + fetchids.size)
+      //println("tofetch: " + fetchids.size)
       val workers = for (n <- 0 until 10) yield new WorkerActor
 
       inProgress = workers.size;
@@ -123,6 +123,7 @@ object StatsFactory extends Actor {
       react {
         case res: Result => {
           m_results = m_results ::: res.stats
+          //println(m_results)
         }
         case "STOP" => {
           inProgress -= 1
