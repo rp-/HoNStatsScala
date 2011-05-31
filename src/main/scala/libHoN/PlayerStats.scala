@@ -18,7 +18,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     assert(xmlData != Nil)
     val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
     val matches = StatsFactory.getMatchStatsByMatchId(mids)
-    println(matches.size + ":" + mids.size)
+    //println(matches.size + ":" + mids.size)
     assert(matches.size == mids.size)
     matches
   }
