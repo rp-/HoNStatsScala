@@ -1,6 +1,7 @@
 package libHoN
 
 import java.sql._;
+import scala.xml._;
 
 class MatchStats(MatchID: Int, matchData: String) {
   require(MatchID.isValidInt)
@@ -18,19 +19,31 @@ class MatchStats(MatchID: Int, matchData: String) {
 
   def cacheEntry(conn: java.sql.Connection) = {
     //if (!isCached(conn)) {
-      val query = "INSERT INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
-      val ps = conn.prepareStatement(query)
-      ps.setInt(1, MatchID)
-      ps.setString(2, matchData.toString)
-      try {
-        ps.executeUpdate
-      } catch {
-        case see: java.sql.SQLSyntaxErrorException => {
-          println("ERROR(" + MatchID + ": " + query)
-        }
+    val query = "INSERT INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
+    val ps = conn.prepareStatement(query)
+    ps.setInt(1, MatchID)
+    ps.setString(2, matchData.toString)
+    try {
+      ps.executeUpdate
+    } catch {
+      case see: java.sql.SQLSyntaxErrorException => {
+        println("ERROR(" + MatchID + ": " + query)
       }
-      ps.close
+    }
+    ps.close
     //}
+  }
+
+  def getPlayerStats(aid: String): scala.xml.Node = {
+    val xmlData = XML.loadString(matchData)
+
+    (xmlData \ "match_stats" \ "ms").filter(ms => ms.attribute("aid").get.toString == aid).head
+  }
+
+  def getPlayerMatchStat(aid: String, attribute: String): String = {
+    val stats = getPlayerStats(aid)
+
+    (stats \ "stat").filter(st => st.attribute("name").get.toString == attribute).head.text
   }
 }
 
