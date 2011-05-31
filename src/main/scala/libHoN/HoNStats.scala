@@ -5,19 +5,54 @@ import scopt._
 object HoNStats extends App {
 
   try {
-    var nicks: List[String] = Nil
+    var honargs: List[String] = Nil
+    var limit : Int = 1
+    val commands = List("player", "match")
     val parser = new OptionParser("HoNStats") {
-      arglist("nicks...", "nicknames of players to retrieve stats",
-        { v: String => nicks = (v :: nicks) })
+      //arg("command", "command one of [" + commands.mkString(",") + "]", { v: String => command = v })
+      intOpt("l", "limit", "limit output list size", { v: Int => limit = v})
+      arglist("command nicks...", "command[" + commands.mkString(",") + "], nicknames of players to retrieve stats",
+        { v: String => honargs = (v :: honargs) })
     }
-    parser.parse(args)
+    if (parser.parse(args)) {
+      val command = honargs.reverse.head
+      val nicks = honargs.reverse.tail
+      command match {
+        case "player" => {
+          val players = StatsFactory.getPlayerStatsByNick(nicks)
 
-    val players = StatsFactory.getPlayerStatsByNick(nicks)
+          players.foreach(p =>
+            println("%s: MMR-> %d; KDA(%d/%d/%d) -> %f".format(
+              p.attribute(PlayerAttr.NICKNAME),
+              p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
+              p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
+              p.attribute(PlayerAttr.RANK_DEATHS).toInt,
+              p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
+              (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat))))
+        }
+        case "match" => {
+          val players = StatsFactory.getPlayerStatsByNick(nicks)
 
-    players.foreach(p =>
-      println("%s: MMR-> %d".format(
-        p.attribute(PlayerAttr.NICKNAME),
-        p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt)))
+          for (player <- players) {
+            val matches = player.getPlayedMatches
+
+            println(player.attribute(PlayerAttr.NICKNAME))
+            val showmatches = matches.reverse.take(limit)
+            for (outmatch <- showmatches) {
+	            println(" * mid: %d\t\tKDA(%d/%d/%d)".format(
+	                outmatch.getMatchID,
+	                outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
+	                outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
+	                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt))
+            }
+          }
+        }
+        case x => {
+          println("Unknown command: '" + x + "'")
+          println("Allowed commands: " + commands.mkString(","))
+        }
+      }
+    }
     /*
     val pllist = StatsFactory.getPlayerStatsByNick(List("Erpe", "Sandla"));
 
