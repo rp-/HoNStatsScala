@@ -13,13 +13,14 @@ class PlayerStats(playerData: scala.xml.Node) {
 
   def getAID: String = playerData.attribute("aid").get.text;
 
-  def getPlayedMatches(): List[MatchStats] = {
+  def getPlayedMatches(maxMatches: Int = 0): List[MatchStats] = {
     val xmlData = XML.load(StatsFactory.XMLRequester + "?f=public_history&opt=aid&aid[]=" + getAID)
     assert(xmlData != Nil)
     val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
-    val matches = StatsFactory.getMatchStatsByMatchId(mids)
+
+    val matches = StatsFactory.getMatchStatsByMatchId(if (maxMatches > 0) mids.reverse.take(maxMatches) else mids)
     //println(matches.size + ":" + mids.size)
-    assert(matches.size == mids.size)
+    //assert(matches.size == mids.size)
     matches
   }
 

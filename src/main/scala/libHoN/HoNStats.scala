@@ -6,11 +6,11 @@ object HoNStats extends App {
 
   try {
     var honargs: List[String] = Nil
-    var limit : Int = 1
+    var limit: Int = 1
     val commands = List("player", "match")
     val parser = new OptionParser("HoNStats") {
       //arg("command", "command one of [" + commands.mkString(",") + "]", { v: String => command = v })
-      intOpt("l", "limit", "limit output list size", { v: Int => limit = v})
+      intOpt("l", "limit", "limit output list size", { v: Int => limit = v })
       arglist("command nicks...", "command[" + commands.mkString(",") + "], nicknames of players to retrieve stats",
         { v: String => honargs = (v :: honargs) })
     }
@@ -21,8 +21,9 @@ object HoNStats extends App {
         case "player" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
+          println("%-10s %-5s %-14s %-4s".format("Nick", "MMR", "KDA", "KDR"))
           players.foreach(p =>
-            println("%s: MMR-> %d; KDA(%d/%d/%d) -> %f".format(
+            println("%-10s %-5d %-4d/%-4d/%-4d %f".format(
               p.attribute(PlayerAttr.NICKNAME),
               p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
               p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
@@ -34,16 +35,16 @@ object HoNStats extends App {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
           for (player <- players) {
-            val matches = player.getPlayedMatches
+            val matches = player.getPlayedMatches(limit)
 
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)
             for (outmatch <- showmatches) {
-	            println(" * mid: %d; KDA(%d/%d/%d)".format(
-	                outmatch.getMatchID,
-	                outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
-	                outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
-	                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt))
+              println(" * mid: %d; KDA(%d/%d/%d)".format(
+                outmatch.getMatchID,
+                outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
+                outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
+                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt))
             }
           }
         }
