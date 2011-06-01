@@ -14,7 +14,7 @@ class PlayerStats(playerData: scala.xml.Node) {
   def getAID: String = playerData.attribute("aid").get.text;
 
   def getPlayedMatches(maxMatches: Int = 0): List[MatchStats] = {
-    val xmlData = XML.load(StatsFactory.XMLRequester + "?f=public_history&opt=aid&aid[]=" + getAID)
+    val xmlData = XML.load(StatsFactory.XMLRequester + "?f=ranked_history&opt=aid&aid[]=" + getAID)
     assert(xmlData != Nil)
     val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
 
