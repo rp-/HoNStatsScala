@@ -34,6 +34,12 @@ class MatchStats(MatchID: Int, matchData: String) {
     //}
   }
 
+  def getMatchStat(stat: String): String = {
+    val xmlData = XML.loadString(matchData)
+
+    (xmlData \ "summ" \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
+  }
+
   def getPlayerStats(aid: String): scala.xml.Node = {
     val xmlData = XML.loadString(matchData)
 

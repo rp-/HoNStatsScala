@@ -21,15 +21,16 @@ object HoNStats extends App {
         case "player" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
-          println("%-10s %-5s %-14s %-4s".format("Nick", "MMR", "KDA", "KDR"))
+          println("%-10s %-5s %-5s %-4s %-4s %-5s %s".format("Nick", "MMR", "K", "D", "A", "KDR", "MMP"))
           players.foreach(p =>
-            println("%-10s %-5d %-4d/%-4d/%-4d %f".format(
+            println("%-10s %-5d %-4d/%-4d/%-4d %5.2f  %d".format(
               p.attribute(PlayerAttr.NICKNAME),
               p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
               p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
               p.attribute(PlayerAttr.RANK_DEATHS).toInt,
               p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
-              (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat))))
+              (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat),
+              p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt)))
         }
         case "match" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
@@ -39,9 +40,11 @@ object HoNStats extends App {
 
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)
+            println(" %-9s %-16s %2s %2s %2s".format("MID", "Date", "K", "D", "A"))
             for (outmatch <- showmatches) {
-              println(" * mid: %d; KDA(%d/%d/%d)".format(
+              println(" %-9d %-16s %2d/%2d/%2d".format(
                 outmatch.getMatchID,
+                outmatch.getMatchStat("mdt").substring(0,16),
                 outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
                 outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
                 outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt))
