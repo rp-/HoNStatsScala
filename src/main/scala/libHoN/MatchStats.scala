@@ -51,6 +51,52 @@ class MatchStats(MatchID: Int, matchData: String) {
 
     (stats \ "stat").filter(st => st.attribute("name").get.toString == attribute).head.text
   }
+  
+  def playerWon(aid: String) : Boolean = {
+    getPlayerMatchStat(aid, "team").toInt == getWinningTeam()
+  }
+  
+  def getTeamStat(side : String, stat : String) : String = {
+    val xmlData = XML.loadString(matchData)
+    val sideMap = Map( "Legion" -> 1, "Hellbourne" -> 2)
+    
+    val team = (xmlData \ "team").filter(t => t.attribute("side").get.text.toInt == sideMap(side)).head
+    (team \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
+  }
+  
+  def getWinningTeam() : Int = {
+    val xmlData = XML.loadString(matchData)
+    
+    val winning = for { team <- (xmlData \ "team") } yield (team \ "stat").filter(s => s.attribute("name").get.head.text == "tm_wins")
+    
+    val legionWins = getTeamStat("Legion", "tm_wins").toInt
+    if (legionWins > 0)
+      1
+    else
+      2
+  }
+  
+  def getGameDuration() : String = {
+    val time = getMatchStat(MatchAttr.TIME_PLAYED).toInt
+    
+    "%d:%02d".format((time%3600)/60, (time%60))
+  }
+}
+
+object MatchAttr {
+  val MAP = "map"
+  val TIME_PLAYED = "time_played"
+  val MATCH_DATE = "mdt"
+  val SINGLE_DRAFT = "sd"
+  val ALL_PICK = "ap"
+  val BANNING_DRAFT = "bd"
+  val BANNING_PICK = "bp"
+  val ALL_RANDOM = "ar"
+  val MAX_PLAYERS = "max_players"
+}
+
+object MatchPlayerAttr {
+  val WARDS = "wards"
 }
 
 object MatchStatsSql {
