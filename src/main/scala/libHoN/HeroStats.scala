@@ -1,0 +1,98 @@
+package libHoN
+
+class HeroStats {
+
+}
+
+object HeroAttr {
+  
+  def getNick(hid : Int) : String = {
+    hid match {
+      case 26 => "DL"
+      case 104 => "Hag"
+      case x => IDMap.get(x).get.substring(0,4)
+    }
+  }
+  
+  val IDMap = Map( 
+      2 -> "Armadon",
+      3 -> "Behemoth",
+      4 -> "Chronos",
+      5 -> "Defiler",
+      6 -> "Devourer",
+      7 -> "Blacksmith",
+      8 -> "Slither",
+      9 -> "Electrician",
+      10 -> "Nymphora",
+      12 -> "Glacius",
+      13 -> "Hammerstorm",
+      14 -> "Night Hound",
+      15 -> "Swiftblade",
+      16 -> "Blood Hunter",
+      17 -> "Kraken",
+      18 -> "Thunderbringer",
+      20 -> "Moon Queen",
+      21 -> "Pollywog Priest",
+      22 -> "Pebbles",
+      24 -> "Soulstealer",
+      25 -> "Keeper of Forest",
+      26 -> "The Dark Lady",
+      43 -> "Demented Shaman",
+      27 -> "Voodoo Jester",
+      29 -> "War Beast",
+      30 -> "Wildsoul",
+      31 -> "Zephyr",
+      34 -> "Pharao",
+      35 -> "Tempest",
+      36 -> "Ophelia",
+      37 -> "Magebane",
+      38 -> "Legionnaire",
+      39 -> "Predator",
+      40 -> "Accursed",
+      41 -> "Nomad",
+      42 -> "The Madman",
+      44 -> "Scout",
+      94 -> "Pyromancer",
+      91 -> "Puppet Master",
+      95 -> "Maliken",
+      96 -> "Arachna",
+      93 -> "Hellbringer",
+      90 -> "Torturer",
+      89 -> "Jereziah",
+      102 -> "Andromeda",
+      103 -> "Valkyrie",
+      104 -> "Wretched Hag",
+      105 -> "Succubus",
+      106 -> "Magmus",
+      108 -> "Plague Rider",
+      109 -> "Soul Reaper",
+      110 -> "Pandamonium",
+      115 -> "Vindicator",
+      114 -> "Corrupted Disciple",
+      116 -> "Sand Wraith",
+      117 -> "Rampage",
+      120 -> "Witch Slayer",
+      121 -> "Forsaken Archer",
+      122 -> "Engineer",
+      123 -> "Deadwood",
+      124 -> "Chipper",
+      125 -> "Bubbles",
+      126 -> "Fade",
+      127 -> "Balphagor",
+      128 -> "Gauntlet",
+      160 -> "Tundra",
+      161 -> "Gladiator",
+      162 -> "Doctor Replusor",
+      170 -> "Tremble",
+      163 -> "Flint Beastwood",
+      164 -> "Bombardier",
+      165 -> "Moraxus",
+      166 -> "Myrmidon",
+      167 -> "Dampeer",
+      168 -> "Empath",
+      169 -> "Aluna",
+      185 -> "Silhouette",
+      187 -> "Flux",
+      188 -> "Martyr"
+      )
+}
