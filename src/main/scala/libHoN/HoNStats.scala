@@ -7,7 +7,7 @@ object HoNStats extends App {
   try {
     var honargs: List[String] = Nil
     var limit: Int = 1
-    val commands = List("player", "match")
+    val commands = List("player", "matches")
     val parser = new OptionParser("HoNStats") {
       //arg("command", "command one of [" + commands.mkString(",") + "]", { v: String => command = v })
       intOpt("l", "limit", "limit output list size", { v: Int => limit = v })
@@ -32,7 +32,7 @@ object HoNStats extends App {
               (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat),
               p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt)))
         }
-        case "match" => {
+        case "matches" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
           for (player <- players) {
