@@ -40,18 +40,22 @@ object HoNStats extends App {
 
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)
-            println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s".format("MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards"))
+            println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s".format(
+              "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
             for (outmatch <- showmatches) {
-              println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s".format(
+              println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d".format(
                 outmatch.getMatchID,
                 outmatch.getGameDuration,
                 outmatch.getMatchStat("mdt").substring(0, 16),
-                outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
-                outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
-                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt,
+                outmatch.getPlayerMatchStatAsInt(player.getAID, "herokills"),
+                outmatch.getPlayerMatchStatAsInt(player.getAID, "deaths"),
+                outmatch.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
                 HeroAttr.getNick(outmatch.getPlayerMatchStat(player.getAID, "hero_id").toInt),
                 if (outmatch.playerWon(player.getAID)) "W" else "L",
-                outmatch.getPlayerMatchStat(player.getAID, MatchPlayerAttr.WARDS)))
+                outmatch.getPlayerMatchStat(player.getAID, MatchPlayerAttr.WARDS),
+                outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.TEAMCREEPKILLS) + outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.NEUTRALCREEPKILLS),
+                outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
+                outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / (outmatch.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60)))
             }
           }
         }
@@ -61,24 +65,6 @@ object HoNStats extends App {
         }
       }
     }
-    /*
-    val pllist = StatsFactory.getPlayerStatsByNick(List("Erpe", "Sandla"));
-
-    val erpe: PlayerStats = pllist(0)
-    val marc: PlayerStats = pllist(1)
-    //  val matches = erpe.getPlayedMatches
-    //println(matches.length)
-    val rpTime = System.currentTimeMillis
-    val rpmatches = erpe.getPlayedMatches
-    println("Erpe fetch(" + rpmatches.size + ") time: " + (System.currentTimeMillis - rpTime))
-
-    val marcTime = System.currentTimeMillis
-    val marcmatches = marc.getPlayedMatches
-    println("Marc fetch(" + marcmatches.size + ") time: " + (System.currentTimeMillis - marcTime))
-
-    pllist.foreach(p => println(p.attribute(PlayerAttr.NICKNAME) + "(" + p.getAID + ") = MMR: " + p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING) + " played: " + p.getPlayedMatches.size))
-    println("list size: " + pllist.length)
-    */
   } finally {
     StatsFactory.dispose
   }

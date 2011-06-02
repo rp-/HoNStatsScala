@@ -40,6 +40,10 @@ class MatchStats(MatchID: Int, matchData: String) {
     (xmlData \ "summ" \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
   }
 
+  def getMatchStatAsInt(stat: String): Int = {
+    getMatchStat(stat).toInt
+  }
+
   def getPlayerStats(aid: String): scala.xml.Node = {
     val xmlData = XML.loadString(matchData)
 
@@ -51,35 +55,39 @@ class MatchStats(MatchID: Int, matchData: String) {
 
     (stats \ "stat").filter(st => st.attribute("name").get.toString == attribute).head.text
   }
-  
-  def playerWon(aid: String) : Boolean = {
+
+  def getPlayerMatchStatAsInt(aid: String, attribute: String): Int = {
+    getPlayerMatchStat(aid, attribute).toInt
+  }
+
+  def playerWon(aid: String): Boolean = {
     getPlayerMatchStat(aid, "team").toInt == getWinningTeam()
   }
-  
-  def getTeamStat(side : String, stat : String) : String = {
+
+  def getTeamStat(side: String, stat: String): String = {
     val xmlData = XML.loadString(matchData)
-    val sideMap = Map( "Legion" -> 1, "Hellbourne" -> 2)
-    
+    val sideMap = Map("Legion" -> 1, "Hellbourne" -> 2)
+
     val team = (xmlData \ "team").filter(t => t.attribute("side").get.text.toInt == sideMap(side)).head
     (team \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
   }
-  
-  def getWinningTeam() : Int = {
+
+  def getWinningTeam(): Int = {
     val xmlData = XML.loadString(matchData)
-    
+
     val winning = for { team <- (xmlData \ "team") } yield (team \ "stat").filter(s => s.attribute("name").get.head.text == "tm_wins")
-    
+
     val legionWins = getTeamStat("Legion", "tm_wins").toInt
     if (legionWins > 0)
       1
     else
       2
   }
-  
-  def getGameDuration() : String = {
+
+  def getGameDuration(): String = {
     val time = getMatchStat(MatchAttr.TIME_PLAYED).toInt
-    
-    "%d:%02d".format((time%3600)/60, (time%60))
+
+    "%d:%02d".format((time % 3600) / 60, (time % 60))
   }
 }
 
@@ -97,6 +105,10 @@ object MatchAttr {
 
 object MatchPlayerAttr {
   val WARDS = "wards"
+  val DENIES = "denies"
+  val TEAMCREEPKILLS = "teamcreepkills"
+  val NEUTRALCREEPKILLS = "neutralcreepkills"
+  val GOLD = "gold"
 }
 
 object MatchStatsSql {
