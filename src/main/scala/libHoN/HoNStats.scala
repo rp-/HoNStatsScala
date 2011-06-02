@@ -40,14 +40,18 @@ object HoNStats extends App {
 
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)
-            println(" %-9s %-16s %2s %2s %2s".format("MID", "Date", "K", "D", "A"))
+            println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s".format("MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards"))
             for (outmatch <- showmatches) {
-              println(" %-9d %-16s %2d/%2d/%2d".format(
+              println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s".format(
                 outmatch.getMatchID,
-                outmatch.getMatchStat("mdt").substring(0,16),
+                outmatch.getGameDuration,
+                outmatch.getMatchStat("mdt").substring(0, 16),
                 outmatch.getPlayerMatchStat(player.getAID, "herokills").toInt,
                 outmatch.getPlayerMatchStat(player.getAID, "deaths").toInt,
-                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt))
+                outmatch.getPlayerMatchStat(player.getAID, "heroassists").toInt,
+                HeroAttr.getNick(outmatch.getPlayerMatchStat(player.getAID, "hero_id").toInt),
+                if (outmatch.playerWon(player.getAID)) "W" else "L",
+                outmatch.getPlayerMatchStat(player.getAID, MatchPlayerAttr.WARDS)))
             }
           }
         }
