@@ -15,7 +15,7 @@ object StatsFactory extends Actor {
 
   def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
     val query = nicks.mkString("&nick[]=");
-    val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query);
+    val xmlData = XML.load( new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
     if (xmlData.label == "error")
       Nil
     else {
