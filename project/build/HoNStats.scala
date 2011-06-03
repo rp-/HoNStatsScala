@@ -18,4 +18,10 @@ class HoNStats(info: ProjectInfo) extends DefaultProject(info)
 
   override def proguardInJars =
     Path.fromFile(scalaLibraryJar) +++ super.proguardInJars
+
+  lazy val install = task {
+	val source = outputPath / (artifactID + "-" + projectVersion.value + ".min.jar")
+	val target : Path = Path.fromFile( new java.io.File("/usr/local/bin/HoNStats.jar") )
+	sbt.FileUtilities.copyFile( source, target, new ConsoleLogger() )
+	None } dependsOn(proguard)
 }
