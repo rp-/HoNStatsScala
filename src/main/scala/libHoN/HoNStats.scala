@@ -3,7 +3,7 @@ package libHoN;
 import scopt._
 
 object HoNStats extends App {
-
+  val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
   try {
     var honargs: List[String] = Nil
     var limit: Int = 1
@@ -46,7 +46,7 @@ object HoNStats extends App {
               println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d".format(
                 outmatch.getMatchID,
                 outmatch.getGameDuration,
-                outmatch.getMatchStat("mdt").substring(0, 16),
+                dateFormat.format(outmatch.getLocalMatchDateTime),
                 outmatch.getPlayerMatchStatAsInt(player.getAID, "herokills"),
                 outmatch.getPlayerMatchStatAsInt(player.getAID, "deaths"),
                 outmatch.getPlayerMatchStatAsInt(player.getAID, "heroassists"),

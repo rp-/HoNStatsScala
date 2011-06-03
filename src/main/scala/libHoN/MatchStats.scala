@@ -7,7 +7,7 @@ class MatchStats(MatchID: Int, matchData: String) {
   require(MatchID.isValidInt)
   override def toString = matchData.toString
   def getMatchID = this.MatchID
-  lazy val xmlMatchData : scala.xml.Node = XML.loadString(matchData)
+  lazy val xmlMatchData: scala.xml.Node = XML.loadString(matchData)
 
   def isCached(conn: java.sql.Connection) = {
     val query = "SELECT mid FROM MatchStats WHERE mid = " + MatchID
@@ -45,6 +45,11 @@ class MatchStats(MatchID: Int, matchData: String) {
 
   def getPlayerStats(aid: String): scala.xml.Node = {
     (xmlMatchData \ "match_stats" \ "ms").filter(ms => ms.attribute("aid").get.toString == aid).head
+  }
+
+  val dfm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
+  def getLocalMatchDateTime(): java.util.Date = {
+    dfm.parse(getMatchStat(MatchAttr.MATCH_DATETIME) + " -0400")
   }
 
   def getPlayerMatchStat(aid: String, attribute: String): String = {
@@ -88,7 +93,7 @@ class MatchStats(MatchID: Int, matchData: String) {
 object MatchAttr {
   val MAP = "map"
   val TIME_PLAYED = "time_played"
-  val MATCH_DATE = "mdt"
+  val MATCH_DATETIME = "mdt"
   val SINGLE_DRAFT = "sd"
   val ALL_PICK = "ap"
   val BANNING_DRAFT = "bd"
