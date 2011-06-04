@@ -11,15 +11,23 @@ object StatsFactory extends Actor {
   Class.forName("org.hsqldb.jdbc.JDBCDriver").newInstance
   val connection = DriverManager.getConnection("jdbc:hsqldb:file:statsdb", "SA", "")
   MatchStatsSql.createTable(connection)
+  PlayerStatsSql.createTable(connection)
   start
 
   def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
+    if (nicks.isEmpty)
+      return Nil
+
+    //val cached = PlayerStatsSql.getEntries(connection, nicks)
+
     val query = nicks.mkString("&nick[]=");
-    val xmlData = XML.load( new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
+    val xmlData = XML.load(new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
     if (xmlData.label == "error")
       Nil
     else {
       val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
+
+      ret.foreach(p => p.cacheEntry(connection))
 
       if (nicks.length > 50)
         ret ::: getPlayerStatsByNick(nicks.drop(50))
@@ -98,17 +106,19 @@ object StatsFactory extends Actor {
     if (ids.size == 0)
       return Nil
 
-    val qids = ids.take(1)
+    val qids = ids.take(50)
     val query = qids.mkString("&mid[]=");
     val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
     val ret = (for { match_ <- (xmlData \ "stats" \ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList;
 
     assert(ret.size > 0)
     ret.foreach(m => m.cacheEntry(connection))
-    return ret ::: fetchMatchStats(ids.drop(1))
+    return ret ::: fetchMatchStats(ids.drop(50))
   }
 
   def dispose = {
+    val st = connection.createStatement
+    st.execute("SHUTDOWN COMPACT")
     connection.close
     this ! "EXIT"
   }

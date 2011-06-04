@@ -35,12 +35,15 @@ class MatchStats(MatchID: Int, matchData: String) {
     //}
   }
 
-  def getMatchStat(stat: String): String = {
-    (xmlMatchData \ "summ" \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
+  def getMatchStat(stat: String): Option[String] = {
+    if (!(xmlMatchData \ "summ" \ "stat").isEmpty)
+      Option((xmlMatchData \ "summ" \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text)
+    else
+      None
   }
 
   def getMatchStatAsInt(stat: String): Int = {
-    getMatchStat(stat).toInt
+    getMatchStat(stat).getOrElse("0").toInt
   }
 
   def getPlayerStats(aid: String): scala.xml.Node = {
@@ -49,7 +52,10 @@ class MatchStats(MatchID: Int, matchData: String) {
 
   val dfm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
   def getLocalMatchDateTime(): java.util.Date = {
-    dfm.parse(getMatchStat(MatchAttr.MATCH_DATETIME) + " -0400")
+    if (getMatchStat(MatchAttr.MATCH_DATETIME).isEmpty)
+      new java.util.Date()
+    else
+      dfm.parse(getMatchStat(MatchAttr.MATCH_DATETIME).get + " -0400")
   }
 
   def getPlayerMatchStat(aid: String, attribute: String): String = {
@@ -84,7 +90,7 @@ class MatchStats(MatchID: Int, matchData: String) {
   }
 
   def getGameDuration(): String = {
-    val time = getMatchStat(MatchAttr.TIME_PLAYED).toInt
+    val time = getMatchStatAsInt(MatchAttr.TIME_PLAYED)
 
     "%d:%02d".format((time % 3600) / 60, (time % 60))
   }
@@ -126,8 +132,7 @@ object MatchStatsSql {
   }
 
   def getEntries(conn: java.sql.Connection, mid: List[Int]) = {
-    if (mid.size > 0) {
-      val s = conn.createStatement
+    if (!mid.isEmpty) {
       val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ") ORDER BY mid"
       SQLHelper.queryEach(conn, query) { rs =>
         new MatchStats(rs.getInt("mid"), rs.getString("xmlData"))
