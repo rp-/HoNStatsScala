@@ -91,7 +91,7 @@ object StatsFactory extends Actor {
     //val parfetchids = fetchids.par
     //val res = parfetchids.map(id => fetchMachStats(id)).toList
     res.foreach(m => m.cacheEntry(connection))
-    return (cached ::: res).sort((m1, m2) => (m1.getMatchID < m2.getMatchID))
+    return (cached ::: res).sortWith((m1, m2) => (m1.getMatchID < m2.getMatchID))
   }
 
   private def fetchMatchStats(id: Int): MatchStats = {

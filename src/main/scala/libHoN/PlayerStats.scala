@@ -29,7 +29,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     if (dbEntry.isEmpty) {
       return false
     } else {
-      val dbPlayer = dbEntry.first
+      val dbPlayer = dbEntry.head
       if (dbPlayer.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt != attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt)
         return false
       else
