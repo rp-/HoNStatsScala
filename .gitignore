@@ -1,9 +1,10 @@
 /build/
 .manager/
 /bin/
-/target/
+target/
 lib_managed/
 src_managed/
 project/boot/
+project/plugins/project/
 statsdb.*
 .scala_dependencies
