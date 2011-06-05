@@ -6,10 +6,11 @@ import scala.actors.Actor._
 import java.sql.{ Connection, DriverManager, ResultSet };
 
 object StatsFactory extends Actor {
-  val XMLRequester = "http://xml.heroesofnewerth.com/xml_requester.php"
   //load db driver
-  Class.forName("org.hsqldb.jdbc.JDBCDriver").newInstance
-  val connection = DriverManager.getConnection("jdbc:hsqldb:file:statsdb", "SA", "")
+  Class.forName("org.sqlite.JDBC").newInstance
+  val connection = DriverManager.getConnection("jdbc:sqlite:statsdb.db")
+
+  val XMLRequester = "http://xml.heroesofnewerth.com/xml_requester.php"
   MatchStatsSql.createTable(connection)
   PlayerStatsSql.createTable(connection)
   start
@@ -97,12 +98,10 @@ object StatsFactory extends Actor {
   private def fetchMatchStats(id: Int): MatchStats = {
     val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + id)
     val match_ = (xmlData \ "stats" \ "match")
-    println((match_ \ "@mid").text)
     return new MatchStats((match_ \ "@mid").text.toInt, match_.toString);
   }
 
   private def fetchMatchStats(ids: List[Int]): List[MatchStats] = {
-    println("Left: " + ids.size)
     if (ids.size == 0)
       return Nil
 
@@ -117,8 +116,6 @@ object StatsFactory extends Actor {
   }
 
   def dispose = {
-    val st = connection.createStatement
-    st.execute("SHUTDOWN COMPACT")
     connection.close
     this ! "EXIT"
   }

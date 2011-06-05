@@ -123,9 +123,9 @@ object MatchStatsSql {
     if (!rs.next()) {
       val query = conn.createStatement
       query.execute(
-        """CREATE CACHED TABLE MATCHSTATS (
+        """CREATE TABLE IF NOT EXISTS MATCHSTATS (
              mid integer primary key,
-             xmlData CLOB(32k)
+             xmlData TEXT
            )""")
       query close
     }
