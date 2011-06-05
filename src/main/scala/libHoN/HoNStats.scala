@@ -7,37 +7,75 @@ object HoNStats extends App {
   try {
     var honargs: List[String] = Nil
     var limit: Int = 1
+    var statstype: String = "ranked"
+    val StatTypes = List("ranked", "public", "casual")
     val commands = List("player", "matches")
     val parser = new OptionParser("HoNStats") {
       //arg("command", "command one of [" + commands.mkString(",") + "]", { v: String => command = v })
       intOpt("l", "limit", "limit output list size", { v: Int => limit = v })
+      opt("s", "stats", "stats type [" + StatTypes.mkString(",") + "]", { v: String => statstype = v })
       arglist("command nicks...", "command[" + commands.mkString(",") + "], nicknames of players to retrieve stats",
         { v: String => honargs = (v :: honargs) })
     }
     if (parser.parse(args)) {
+      if (!StatTypes.contains(statstype)) {
+        System.err.println("Stats type: " + statstype + " unknown.")
+        System.exit(2)
+      }
       val command = honargs.reverse.head
       val nicks = honargs.reverse.tail
       command match {
         case "player" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
-          println("%-10s %-5s %-5s %-4s %-4s %-5s %4s %s".format("Nick", "MMR", "K", "D", "A", "KDR", "MMP", "AID"))
-          players.foreach(p =>
-            println("%-10s %-5d %-4d/%-4d/%-4d %5.2f  %4d %d".format(
-              p.attribute(PlayerAttr.NICKNAME),
-              p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
-              p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
-              p.attribute(PlayerAttr.RANK_DEATHS).toInt,
-              p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
-              (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat),
-              p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt,
-              p.getAID.toInt)))
+          val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s"
+          val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d"
+          statstype match {
+            case "ranked" =>
+              println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "MGP", "AID"))
+              players.foreach(p =>
+                println(sPlOutput.format(
+                  p.attribute(PlayerAttr.NICKNAME),
+                  p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
+                  p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
+                  p.attribute(PlayerAttr.RANK_DEATHS).toInt,
+                  p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
+                  (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat),
+                  p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt,
+                  p.getAID.toInt)))
+            case "public" =>
+              println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "GP", "AID"))
+              
+              players.foreach(p =>
+                println(sPlOutput.format(
+                  p.attribute(PlayerAttr.NICKNAME),
+                  p.attribute(PlayerAttr.SKILL).toFloat.toInt,
+                  p.attribute(PlayerAttr.HEROKILLS).toInt,
+                  p.attribute(PlayerAttr.DEATHS).toInt,
+                  p.attribute(PlayerAttr.HEROASSISTS).toInt,
+                  (p.attribute(PlayerAttr.HEROKILLS).toFloat / p.attribute(PlayerAttr.DEATHS).toFloat),
+                  p.attribute(PlayerAttr.GAMES_PLAYED).toInt,
+                  p.getAID.toInt)))
+            case "casual" =>
+              println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "CGP", "AID"))
+              
+              players.foreach(p =>
+                println(sPlOutput.format(
+                  p.attribute(PlayerAttr.NICKNAME),
+                  p.attribute(PlayerAttr.CS_AMM_TEAM_RATING).toFloat.toInt,
+                  p.attribute(PlayerAttr.CS_HEROKILLS).toInt,
+                  p.attribute(PlayerAttr.CS_DEATHS).toInt,
+                  p.attribute(PlayerAttr.CS_HEROASSISTS).toInt,
+                  (p.attribute(PlayerAttr.CS_HEROKILLS).toFloat / p.attribute(PlayerAttr.CS_DEATHS).toFloat),
+                  p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt,
+                  p.getAID.toInt)))
+          }
         }
         case "matches" => {
           val players = StatsFactory.getPlayerStatsByNick(nicks)
 
           for (player <- players) {
-            val matches = player.getPlayedMatches(limit)
+            val matches = player.getPlayedMatches(statstype, limit)
 
             println(player.attribute(PlayerAttr.NICKNAME))
             val showmatches = matches.reverse.take(limit)

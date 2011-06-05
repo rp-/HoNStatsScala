@@ -13,8 +13,8 @@ class PlayerStats(playerData: scala.xml.Node) {
 
   def getAID: String = playerData.attribute("aid").get.text;
 
-  def getPlayedMatches(maxMatches: Int = 0): List[MatchStats] = {
-    val query = StatsFactory.XMLRequester + "?f=ranked_history&opt=aid&aid[]=" + getAID
+  def getPlayedMatches(statstype: String, maxMatches: Int = 0): List[MatchStats] = {
+    val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
     val xmlData = XML.load(query)
     assert(xmlData != Nil)
     val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
