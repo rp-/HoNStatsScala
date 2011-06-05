@@ -94,6 +94,7 @@ object HeroAttr {
       169 -> "Aluna",
       185 -> "Silhouette",
       187 -> "Flux",
-      188 -> "Martyr"
+      188 -> "Martyr",
+      192 -> "Amun-Ra"
       )
 }
