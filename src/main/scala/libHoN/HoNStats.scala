@@ -81,7 +81,7 @@ object HoNStats extends App {
               }
             }
             case "matches" => {
-              val players = StatsFactory.getPlayerStatsByNick(c.nicks)
+              val players = StatsFactory.getPlayerStatsByNickCached(c.nicks)
 
               for (player <- players) {
                 val matches = player.getPlayedMatches(c.statstype, c.limit)

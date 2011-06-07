@@ -15,11 +15,17 @@ object StatsFactory extends Actor {
   PlayerStatsSql.createTable(connection)
   start
 
+  def getPlayerStatsByNickCached(nicks: List[String]): List[PlayerStats] = {
+    val cached = PlayerStatsSql.getEntries(connection, nicks)
+
+    val lowernicks = for { n <- nicks } yield n.toLowerCase
+    val fetchnicks = lowernicks filterNot ((for { c <- cached } yield c.attribute(PlayerAttr.NICKNAME).toLowerCase) contains)
+    return cached ::: getPlayerStatsByNick(fetchnicks)
+  }
+
   def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
     if (nicks.isEmpty)
       return Nil
-
-    //val cached = PlayerStatsSql.getEntries(connection, nicks)
 
     val query = nicks.mkString("&nick[]=");
     val xmlData = XML.load(new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
