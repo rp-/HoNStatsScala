@@ -1,6 +1,7 @@
 package libHoN;
 
 import de.downgra.scarg._
+import oldsch00l.Log;
 
 class Configuration(m: ValueMap) extends ConfigMap(m) {
   val statstype = ("statstype", "ranked").as[String]
@@ -19,6 +20,7 @@ case class CmdParser() extends ArgumentParser(new Configuration(_)) with Default
 }
 
 object HoNStats extends App {
+  Log.level = Log.Level.INFO
   val StatTypes = List("ranked", "public", "casual")
   val commands = List("player", "matches")
 
@@ -91,6 +93,7 @@ object HoNStats extends App {
                 println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s".format(
                   "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
                 for (outmatch <- showmatches) {
+                  Log.debug(outmatch.getMatchID.toString)
                   val game_mins: Int = outmatch.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
                   val gpm = if (game_mins > 0) outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0
                   println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d".format(
