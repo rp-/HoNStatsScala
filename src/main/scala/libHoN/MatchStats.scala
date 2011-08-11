@@ -2,9 +2,11 @@ package libHoN
 
 import java.sql._;
 import scala.xml._;
+import oldsch00l.Log;
 
 class MatchStats(MatchID: Int, matchData: String) {
   require(MatchID.isValidInt)
+  Log.debug(matchData)
   override def toString = matchData.toString
   def getMatchID = this.MatchID
   lazy val xmlMatchData: scala.xml.Node = XML.loadString(matchData)
@@ -75,18 +77,28 @@ class MatchStats(MatchID: Int, matchData: String) {
   def getTeamStat(side: String, stat: String): String = {
     val sideMap = Map("Legion" -> 1, "Hellbourne" -> 2)
 
-    val team = (xmlMatchData \ "team").filter(t => t.attribute("side").get.text.toInt == sideMap(side)).head
-    (team \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
+    val teams = (xmlMatchData \ "team")
+    if(teams.size > 0) {
+      val team = (xmlMatchData \ "team").filter(t => t.attribute("side").get.text.toInt == sideMap(side)).head
+      (team \ "stat").filter(ms => ms.attribute("name").get.toString == stat).head.text
+    } else {
+      null
+    }
   }
 
   def getWinningTeam(): Int = {
-    val winning = for { team <- (xmlMatchData \ "team") } yield (team \ "stat").filter(s => s.attribute("name").get.head.text == "tm_wins")
+    val teams = (xmlMatchData \ "team")
+    if(!teams.isEmpty) {
+      val winning = for { team <- (xmlMatchData \ "team") } yield (team \ "stat").filter(s => s.attribute("name").get.head.text == "tm_wins")
 
-    val legionWins = getTeamStat("Legion", "tm_wins").toInt
-    if (legionWins > 0)
-      1
-    else
-      2
+      val legionWins = getTeamStat("Legion", "tm_wins").toInt
+      if (legionWins > 0)
+        1
+      else
+        2
+    } else {
+      0
+    }
   }
 
   def getGameDuration(): String = {
