@@ -77,7 +77,7 @@ object StatsFactory extends Actor {
       def createQueryList(ids: List[Int]): List[String] = ids match {
         case List() => List()
         case x => {
-          val qSize = 1
+          val qSize = 50
           x.take(qSize).mkString("&mid[]=") :: createQueryList(x.drop(qSize))
         }
       }
