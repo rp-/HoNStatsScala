@@ -177,7 +177,7 @@ object HoNStats extends App {
           game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
 
-      val size = scala.Math.max(legionStrings.size, hellStrings.size)
+      val size = scala.math.max(legionStrings.size, hellStrings.size)
       for (i <- 0 until size) {
         val hellLine = if(i < hellStrings.size) hellStrings(i) else ""
         if(i < legionStrings.size) {
