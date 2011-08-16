@@ -95,6 +95,13 @@ object HeroAttr {
       185 -> "Silhouette",
       187 -> "Flux",
       188 -> "Martyr",
-      192 -> "Amun-Ra"
+      192 -> "Amun-Ra",
+      194 -> "Parasite",
+      195 -> "Emerald Warden",
+      196 -> "Revenant",
+      197 -> "Monkey King",
+      201 -> "Drunken Master",
+      202 -> "Master of Arms",
+      203 -> "Rhapsody"
       )
 }
