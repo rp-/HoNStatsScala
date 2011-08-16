@@ -143,14 +143,16 @@ object HoNStats extends App {
       val winTeam = game.getWinningTeam()
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
-      println("%-20s %-2s %-2s %-2s %-20s %-2s %-2s %-2s".format(sLegion, "K", "D", "A", sHellbourne, "K", "D", "A"))
+      println("%-19s %-5s %-2s %-2s %-2s %-19s %-4s %-2s %-2s %-2s".format(
+          sLegion, "Hero", "K", "D", "A", sHellbourne, "Hero", "K", "D", "A"))
 
       val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
       var outList : List[String] = Nil
       for (player <- legionPlayers) {
-        outList = "%-4d %-14s %2d %2d %2d  ".format(
+        outList = "%-4d %-14s %-4s %2d %2d %2d  ".format(
             player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
             game.getPlayerMatchStat(player.getAID, "nickname"),
+            HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
             game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
             game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
             game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: outList
@@ -160,9 +162,10 @@ object HoNStats extends App {
       var i = 0
       var endList : List[String] = Nil
       for (player <- hellPlayers) {
-        endList = outList(i) + "%-4d %-14s %2d %2d %2d".format(
+        endList = outList(i) + "%-4d %-14s %-4s %2d %2d %2d".format(
             player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
             game.getPlayerMatchStat(player.getAID, "nickname"),
+            HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
             game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
             game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
             game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: endList
