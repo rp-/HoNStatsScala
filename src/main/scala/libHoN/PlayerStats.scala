@@ -2,6 +2,8 @@ package libHoN
 
 import scala.xml._;
 
+import oldsch00l.Log
+
 class PlayerStats(playerData: scala.xml.Node) {
   def attribute(name: String): String = {
     (playerData \ "stat").filter(attributeNameValueEquals(name)).text
@@ -30,10 +32,8 @@ class PlayerStats(playerData: scala.xml.Node) {
       return false
     } else {
       val dbPlayer = dbEntry.head
-      if (dbPlayer.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt != attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt)
-        return false
-      else
-        return true
+      //TODO look for last insertDate
+      return dbPlayer.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt == attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt
     }
   }
 
@@ -48,10 +48,10 @@ class PlayerStats(playerData: scala.xml.Node) {
         val inserts = ps.executeUpdate
       } catch {
         case see: java.sql.SQLSyntaxErrorException => {
-          println("ERROR(" + getAID + ": " + query)
+          Log.error("ERROR(" + getAID + ": " + query)
         }
         case x => {
-          println("ERROR")
+          Log.error("ERROR")
         }
       }
     }
