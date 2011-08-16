@@ -139,41 +139,53 @@ object HoNStats extends App {
     val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- config.items) yield matchid.toInt)
 
     for (game <- matches) {
-      println(game.getMatchID)
+      println("Match " + game.getMatchID)
       val winTeam = game.getWinningTeam()
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
-      println("%-19s %-5s %-2s %-2s %-2s %-19s %-4s %-2s %-2s %-2s".format(
-          sLegion, "Hero", "K", "D", "A", sHellbourne, "Hero", "K", "D", "A"))
+      val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
+
+      println("%-19s %-4s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %3s %2s %3s %4s".format(
+          sLegion, "Hero", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
 
       val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
-      var outList : List[String] = Nil
-      for (player <- legionPlayers) {
-        outList = "%-4d %-14s %-4s %2d %2d %2d  ".format(
+      val legionStrings = for (player <- legionPlayers) yield
+        "%-4d %-14s %-4s %2d %2d %2d %3d %2d %3d %4d  ".format(
             player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
             game.getPlayerMatchStat(player.getAID, "nickname"),
             HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
             game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
             game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
-            game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: outList
-      }
+            game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
+            game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.TEAMCREEPKILLS) + game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.NEUTRALCREEPKILLS),
+            game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
+            if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
+            game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
       val hellPlayers = StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
-      var i = 0
-      var endList : List[String] = Nil
-      for (player <- hellPlayers) {
-        endList = outList(i) + "%-4d %-14s %-4s %2d %2d %2d".format(
-            player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
-            game.getPlayerMatchStat(player.getAID, "nickname"),
-            HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
-            game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
-            game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
-            game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: endList
-        i += 1
+      val hellStrings = for (player <- hellPlayers) yield
+        "%-4d %-14s %-4s %2d %2d %2d %3d %2d %3d %4d".format(
+          player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
+          game.getPlayerMatchStat(player.getAID, "nickname"),
+          HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
+          game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
+          game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
+          game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
+          game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.TEAMCREEPKILLS) + game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.NEUTRALCREEPKILLS),
+          game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
+          if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
+          game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
+
+
+      val size = scala.Math.max(legionStrings.size, hellStrings.size)
+      for (i <- 0 until size) {
+        val hellLine = if(i < hellStrings.size) hellStrings(i) else ""
+        if(i < legionStrings.size) {
+          println(legionStrings(i) + hellLine)
+        } else {
+          println("%-35s".format(" ") + hellLine)
+        }
       }
-
-      endList.foreach(line => println(line))
-
       println("--")
     }
   }
