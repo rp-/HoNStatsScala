@@ -7,7 +7,7 @@ class Configuration(m: ValueMap) extends ConfigMap(m) {
   val statstype = ("statstype", "ranked").as[String]
   val limit = ("limit", 3).as[Int]
   val command = ("command", "player").as[String]
-  val nicks = ("nicks").asList[String]
+  val items = ("items").asList[String]
 }
 
 case class CmdParser() extends ArgumentParser(new Configuration(_)) with DefaultHelpViewer {
@@ -16,13 +16,13 @@ case class CmdParser() extends ArgumentParser(new Configuration(_)) with Default
   !"-s" | "--statstype" |^ "statstype" |* "ranked" |% "stats type [" + HoNStats.StatTypes.mkString(",") + "]" |> "statstype"
   !"-l" | "--limit" |^ "limit" |* 3 |% "limit output list size" |> "limit"
   +"command" |% "command [" + HoNStats.commands.mkString(",") + "]" |> "command"
-  +"nicks" |% "nicks..." |*> "nicks"
+  +"items" |% "items(nicks or matchids..." |*> "items"
 }
 
 object HoNStats extends App {
   Log.level = Log.Level.INFO
   val StatTypes = List("ranked", "public", "casual")
-  val commands = List("player", "matches")
+  val commands = List("player", "matches", "match")
 
   val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
 
@@ -42,6 +42,9 @@ object HoNStats extends App {
             case "matches" => {
               outputMatches(c)
             }
+            case "match" => {
+              outputMatch(c)
+            }
             case x => {
               println("Unknown command: '" + x + "'")
               println("Allowed commands: " + commands.mkString(","))
@@ -55,7 +58,7 @@ object HoNStats extends App {
   }
 
   def outputPlayer(config: Configuration) = {
-    val players = StatsFactory.getPlayerStatsByNick(config.nicks)
+    val players = StatsFactory.getPlayerStatsByNick(config.items)
 
     val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s"
     val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d"
@@ -102,7 +105,7 @@ object HoNStats extends App {
   }
 
   def outputMatches(config: Configuration) = {
-    val players = StatsFactory.getPlayerStatsByNickCached(config.nicks)
+    val players = StatsFactory.getPlayerStatsByNickCached(config.items)
 
     for (player <- players) {
       val matches = player.getPlayedMatches(config.statstype, config.limit)
@@ -129,6 +132,46 @@ object HoNStats extends App {
           outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
           gpm))
       }
+    }
+  }
+
+  def outputMatch(config: Configuration) = {
+    val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- config.items) yield matchid.toInt)
+
+    for (game <- matches) {
+      println(game.getMatchID)
+      val winTeam = game.getWinningTeam()
+      val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
+      val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
+      println("%-20s %-2s %-2s %-2s %-20s %-2s %-2s %-2s".format(sLegion, "K", "D", "A", sHellbourne, "K", "D", "A"))
+
+      val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
+      var outList : List[String] = Nil
+      for (player <- legionPlayers) {
+        outList = "%-4d %-14s %2d %2d %2d  ".format(
+            player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
+            game.getPlayerMatchStat(player.getAID, "nickname"),
+            game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
+            game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
+            game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: outList
+      }
+
+      val hellPlayers = StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
+      var i = 0
+      var endList : List[String] = Nil
+      for (player <- hellPlayers) {
+        endList = outList(i) + "%-4d %-14s %2d %2d %2d".format(
+            player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
+            game.getPlayerMatchStat(player.getAID, "nickname"),
+            game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
+            game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
+            game.getPlayerMatchStatAsInt(player.getAID, "heroassists")) :: endList
+        i += 1
+      }
+
+      endList.foreach(line => println(line))
+
+      println("--")
     }
   }
 }
