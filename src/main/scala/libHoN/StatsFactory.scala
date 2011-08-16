@@ -43,18 +43,29 @@ object StatsFactory extends Actor {
     }
   }
 
+  def getPlayerStatsByAidCached(aids: List[Int]): List[PlayerStats] = {
+    val cached = PlayerStatsSql.getEntriesByAID(connection, aids)
+
+    val fetchids = aids filterNot ((for { c <- cached } yield c.getAID.toInt) contains)
+    return cached ::: getPlayerStatsByAid(fetchids)
+  }
+
   def getPlayerStatsByAid(aids: List[Int]): List[PlayerStats] = {
     val query = aids.take(50).mkString("&aid[]=");
     val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=aid&aid[]=" + query)
-    if (xmlData.child.exists(_.label == "player_stats")) {
-      val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
 
-      if (aids.length > 50)
-        ret ::: getPlayerStatsByAid(aids.drop(50))
-      else
-        ret
-    } else
+    if (xmlData.label == "error")
       Nil
+    else {
+	    val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
+
+	    ret.foreach(p => p.cacheEntry(connection))
+
+	    if (aids.length > 50)
+	      ret ::: getPlayerStatsByAid(aids.drop(50))
+	    else
+	      ret
+    }
 
   }
 
