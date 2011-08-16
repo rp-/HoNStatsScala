@@ -11,7 +11,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     (node \ "@name").toString == value
   }
 
-  def getAID: String = playerData.attribute("aid").get.text;
+  lazy val getAID: String = playerData.attribute("aid").get.text;
 
   def getPlayedMatches(statstype: String, maxMatches: Int = 0): List[MatchStats] = {
     val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
@@ -83,6 +83,19 @@ object PlayerStatsSql {
     for (nick <- nicks) {
       val query = "SELECT xmlData FROM PlayerStats WHERE LOWER(nickname) = '" +
         nick.toLowerCase + "' AND id=(SELECT MAX(ID) FROM PlayerStats WHERE LOWER(nickname)='" + nick.toLowerCase + "')"
+      val resList = SQLHelper.queryEach(conn, query) { rs =>
+        new PlayerStats(XML.loadString(rs.getString("xmlData")))
+      }
+      if (!resList.isEmpty) entries ::= resList.head
+    }
+    entries
+  }
+
+  def getEntriesByAID(conn: java.sql.Connection, aids: List[Int]): List[PlayerStats] = {
+    var entries: List[PlayerStats] = Nil
+    for (aid <- aids) {
+      val query = "SELECT xmlData FROM PlayerStats WHERE aid=" +
+        aid + " AND id=(SELECT MAX(ID) FROM PlayerStats WHERE aid='" + aid + "')";
       val resList = SQLHelper.queryEach(conn, query) { rs =>
         new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
