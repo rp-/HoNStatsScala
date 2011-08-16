@@ -44,18 +44,21 @@ class MatchStats(MatchID: Int, matchData: String) {
       None
   }
 
+  def getPlayerId(ms: scala.xml.Node): String = ms.attribute("aid").get.toString
+
   def getMatchStatAsInt(stat: String): Int = {
     getMatchStat(stat).getOrElse("0").toInt
   }
 
   def getPlayerStats(aid: String): scala.xml.Node = {
-    (xmlMatchData \ "match_stats" \ "ms").filter(ms => ms.attribute("aid").get.toString == aid).head
+    (xmlMatchData \ "match_stats" \ "ms").filter(ms => getPlayerId(ms) == aid).head
   }
 
   lazy val getPlayersAIDs: List[String] = {
-    val players = (xmlMatchData \ "match_stats" \ "ms")
+    val players = (xmlMatchData \ "match_stats" \ "ms").sortWith((m1, m2) =>
+      getPlayerMatchStatAsInt(getPlayerId(m1), "position") > getPlayerMatchStatAsInt(getPlayerId(m2), "position"))
 
-    (for(player <- players) yield player.attribute("aid").get.toString()).toList
+    (for(player <- players) yield getPlayerId(player)).toList
   }
 
   lazy val getLegionPlayers: List[Int] = {
@@ -142,6 +145,7 @@ object MatchPlayerAttr {
   val TEAMCREEPKILLS = "teamcreepkills"
   val NEUTRALCREEPKILLS = "neutralcreepkills"
   val GOLD = "gold"
+  val GOLDLOST2DEATH = "goldlost2death"
 }
 
 object MatchStatsSql {
