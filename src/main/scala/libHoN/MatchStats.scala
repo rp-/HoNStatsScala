@@ -52,6 +52,22 @@ class MatchStats(MatchID: Int, matchData: String) {
     (xmlMatchData \ "match_stats" \ "ms").filter(ms => ms.attribute("aid").get.toString == aid).head
   }
 
+  lazy val getPlayersAIDs: List[String] = {
+    val players = (xmlMatchData \ "match_stats" \ "ms")
+
+    (for(player <- players) yield player.attribute("aid").get.toString()).toList
+  }
+
+  lazy val getLegionPlayers: List[Int] = {
+    for(player <- getPlayersAIDs
+        if getPlayerMatchStat(player, "team") == "1") yield player.toInt
+  }
+
+  lazy val getHellbournePlayers: List[Int] = {
+    for(player <- getPlayersAIDs
+        if getPlayerMatchStat(player, "team") == "2") yield player.toInt
+  }
+
   val dfm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
   def getLocalMatchDateTime(): java.util.Date = {
     if (getMatchStat(MatchAttr.MATCH_DATETIME).isEmpty)
