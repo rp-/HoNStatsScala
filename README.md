@@ -6,9 +6,9 @@ statistics of the game [Heroes of Newerth](http://www.heroesofnewerth.com).
 
 ## Usage
 
-   usage: HoNStats [options] command items
+    usage: HoNStats [options] command items
 
-   options:
+    options:
       -s statstype, --statstype statstype   stats type [ranked,public,casual]
       -l limit, --limit limit               limit output list size
       command                               command [player,matches,match]
