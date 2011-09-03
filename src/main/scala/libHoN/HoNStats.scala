@@ -139,7 +139,8 @@ object HoNStats extends App {
     val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- config.items) yield matchid.toInt)
 
     for (game <- matches) {
-      println("Match " + game.getMatchID)
+      println("Match %d -- %s - GD: %s".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
+
       val winTeam = game.getWinningTeam()
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
