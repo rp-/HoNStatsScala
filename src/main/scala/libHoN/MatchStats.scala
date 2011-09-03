@@ -123,7 +123,7 @@ class MatchStats(MatchID: Int, matchData: String) {
   def getGameDuration(): String = {
     val time = getMatchStatAsInt(MatchAttr.TIME_PLAYED)
 
-    "%d:%02d".format((time % 3600) / 60, (time % 60))
+    "%d:%02d".format((time / 60).toInt, (time % 60))
   }
 }
 
