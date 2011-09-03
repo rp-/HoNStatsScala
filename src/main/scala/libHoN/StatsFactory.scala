@@ -51,6 +51,9 @@ object StatsFactory extends Actor {
   }
 
   def getPlayerStatsByAid(aids: List[Int]): List[PlayerStats] = {
+    if(aids.isEmpty)
+      return Nil
+
     val query = aids.take(50).mkString("&aid[]=");
     val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=aid&aid[]=" + query)
 
