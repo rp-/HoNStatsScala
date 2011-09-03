@@ -10,6 +10,8 @@ object HeroAttr {
     hid match {
       case 26 => "DL"
       case 104 => "Hag"
+      case 24 => "SS"
+      case 109 => "SR"
       case x => IDMap.getOrElse(x, hid + "|Unknown").substring(0,4)
     }
   }
