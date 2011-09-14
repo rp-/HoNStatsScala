@@ -8,10 +8,17 @@ object HeroAttr {
   
   def getNick(hid : Int) : String = {
     hid match {
-      case 26 => "DL"
-      case 104 => "Hag"
+      case 7 => "BS"
+      case 15 => "SB"
+      case 16 => "BH"
+      case 18 => "TB"
       case 24 => "SS"
+      case 26 => "DL"
+      case 29 => "WB"
+      case 42 => "MadM"
+      case 104 => "Hag"
       case 109 => "SR"
+      case 121 => "FA"
       case x => IDMap.getOrElse(x, hid + "|Unknown").substring(0,4)
     }
   }
