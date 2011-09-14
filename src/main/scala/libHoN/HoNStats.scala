@@ -146,15 +146,16 @@ object HoNStats extends App {
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
       val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
 
-      println("%-19s %-4s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %3s %2s %3s %4s".format(
-          sLegion, "Hero", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
+      println("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s".format(
+          sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
 
       val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
       val legionStrings = for (player <- legionPlayers) yield
-        "%-4d %-14s %-4s %2d %2d %2d %3d %2d %3d %4d  ".format(
+        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d  ".format(
             player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
             game.getPlayerMatchStat(player.getAID, "nickname"),
             HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
+            game.getPlayerMatchStatAsInt(player.getAID, "level"),
             game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
             game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
             game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
@@ -165,10 +166,11 @@ object HoNStats extends App {
 
       val hellPlayers = StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
       val hellStrings = for (player <- hellPlayers) yield
-        "%-4d %-14s %-4s %2d %2d %2d %3d %2d %3d %4d".format(
+        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d".format(
           player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
           game.getPlayerMatchStat(player.getAID, "nickname"),
           HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
+          game.getPlayerMatchStatAsInt(player.getAID, "level"),
           game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
           game.getPlayerMatchStatAsInt(player.getAID, "deaths"),
           game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
