@@ -11,6 +11,9 @@ object CommandMain {
 
   @Parameter(names = Array("-s", "--statstype"), description = "StatsType to show: [ranked,public,casual]")
   var statstype: String = "ranked"
+
+  @Parameter(names = Array("-d", "--debug"), description = "Show debug output")
+  var debug: Boolean = false
 }
 
 @Parameters(separators = "=", commandDescription = "Show player stats")
@@ -61,6 +64,13 @@ object HoNStats extends App {
 	      print(jc.usage())
 	    }
 	  }
+  } catch {
+    case e => {
+      if(CommandMain.debug)
+        e.printStackTrace()
+      else
+        println("HoNStats couldn't perform your request")
+    }
   } finally {
     StatsFactory.dispose
   }
