@@ -2,7 +2,7 @@ package libHoN;
 
 import oldsch00l.Log
 import scala.collection.JavaConversions._
-import com.beust.jcommander.{JCommander, Parameter, Parameters}
+import com.beust.jcommander.{JCommander, Parameter, Parameters, ParameterException}
 
 @Parameters(separators = "=")
 object CommandMain {
@@ -51,9 +51,8 @@ object HoNStats extends App {
   jc.addCommand("matches", CommandMatches)
   jc.addCommand("match", CommandMatch)
 
-  jc.parse(args.toArray: _*)
-
   try {
+    jc.parse(args.toArray: _*)
 	  jc.getParsedCommand() match {
 	    case "player" => {
 	      outputPlayer(CommandPlayer.nicks.toList)
@@ -69,6 +68,9 @@ object HoNStats extends App {
 	    }
 	  }
   } catch {
+    case e:ParameterException => {
+      print(jc.usage())
+    }
     case e => {
       if(CommandMain.debug)
         e.printStackTrace()
