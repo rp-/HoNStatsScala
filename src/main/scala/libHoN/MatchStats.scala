@@ -22,7 +22,7 @@ class MatchStats(MatchID: Int, matchData: String) {
 
   def cacheEntry(conn: java.sql.Connection) = {
     //if (!isCached(conn)) {
-    val query = "INSERT INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
+    val query = "INSERT OR REPLACE INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
     val ps = conn.prepareStatement(query)
     ps.setInt(1, MatchID)
     ps.setString(2, matchData.toString)

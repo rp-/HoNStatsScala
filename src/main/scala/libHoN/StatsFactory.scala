@@ -76,7 +76,7 @@ object StatsFactory extends Actor {
     if (ids.isEmpty)
       return Nil
 
-    val cached = MatchStatsSql.getEntries(connection, ids)
+    val cached = if (CommandMain.fetch) Nil else MatchStatsSql.getEntries(connection, ids)
     val fetchids = ids filterNot ((for { c <- cached } yield c.getMatchID) contains)
 
     m_results = Nil

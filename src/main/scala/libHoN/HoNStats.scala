@@ -14,6 +14,9 @@ object CommandMain {
 
   @Parameter(names = Array("-d", "--debug"), description = "Show debug output")
   var debug: Boolean = false
+
+  @Parameter(names = Array("-f", "--fetch"), description = "Don't use cache")
+  var fetch: Boolean = false
 }
 
 @Parameters(separators = "=", commandDescription = "Show player stats")
@@ -131,10 +134,10 @@ object HoNStats extends App {
     val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
 
     for (player <- players) {
-      val matches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
+      val showmatches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
 
       outBuffer.append(player.attribute(PlayerAttr.NICKNAME) + "\n")
-      val showmatches = matches.reverse.take(CommandMain.limit)
+
       outBuffer.append(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
         "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
       for (outmatch <- showmatches) {
@@ -172,7 +175,11 @@ object HoNStats extends App {
       outBuffer.append("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s\n".format(
           sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
 
-      val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
+      val legionPlayers = if (CommandMain.fetch)
+          StatsFactory.getPlayerStatsByAid(game.getLegionPlayers)
+        else
+          StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
+
       val legionStrings = for (player <- legionPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d  ".format(
             player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
@@ -187,7 +194,10 @@ object HoNStats extends App {
             if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
             game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
-      val hellPlayers = StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
+      val hellPlayers = if (CommandMain.fetch)
+          StatsFactory.getPlayerStatsByAid(game.getHellbournePlayers)
+        else
+          StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
       val hellStrings = for (player <- hellPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d\n".format(
           player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
