@@ -36,6 +36,8 @@ object HoNStats extends App {
 
   val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
 
+  // jcommander has an ambiguous constructor for scala
+  // so we have to use reflection to create it
   val mkJC = classOf[JCommander].getConstructors.filter(_.getParameterTypes.length==1)
   val jc = mkJC.head.newInstance(CommandMain).asInstanceOf[JCommander]
   jc.addCommand("player", CommandPlayer)
