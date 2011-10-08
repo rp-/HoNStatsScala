@@ -1,68 +1,74 @@
 package libHoN;
 
-import de.downgra.scarg._
-import oldsch00l.Log;
+import oldsch00l.Log
+import scala.collection.JavaConversions._
+import com.beust.jcommander.{JCommander, Parameter, Parameters}
 
-class Configuration(m: ValueMap) extends ConfigMap(m) {
-  val statstype = ("statstype", "ranked").as[String]
-  val limit = ("limit", 3).as[Int]
-  val command = ("command", "player").as[String]
-  val items = ("items").asList[String]
+@Parameters(separators = "=")
+object CommandMain {
+  @Parameter(names = Array("-l", "--limit"), description = "Maximum output of items")
+  var limit: Int = 5
+
+  @Parameter(names = Array("-s", "--statstype"), description = "StatsType to show: [ranked,public,casual]")
+  var statstype: String = "ranked"
 }
 
-case class CmdParser() extends ArgumentParser(new Configuration(_)) with DefaultHelpViewer {
-  override val programName = Some("HoNStats")
+@Parameters(separators = "=", commandDescription = "Show player stats")
+object CommandPlayer {
+  @Parameter(description = "Nicknames to show stats")
+  var nicks: java.util.List[String] = null
+}
 
-  !"-s" | "--statstype" |^ "statstype" |* "ranked" |% "stats type [" + HoNStats.StatTypes.mkString(",") + "]" |> "statstype"
-  !"-l" | "--limit" |^ "limit" |* 3 |% "limit output list size" |> "limit"
-  +"command" |% "command [" + HoNStats.commands.mkString(",") + "]" |> "command"
-  +"items" |% "items(nicks or matchids..." |*> "items"
+@Parameters(separators = "=", commandDescription = "Show matches of player")
+object CommandMatches {
+  @Parameter(description = "Nicknames")
+  var nicks: java.util.List[String] = null
+}
+
+@Parameters(separators = "=", commandDescription = "Show stats for a match")
+object CommandMatch {
+  @Parameter(description = "Matchid's to show matches")
+  var matchids: java.util.List[String] = null
 }
 
 object HoNStats extends App {
   Log.level = Log.Level.INFO
-  val StatTypes = List("ranked", "public", "casual")
-  val commands = List("player", "matches", "match")
 
   val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
 
-  try {
-    CmdParser().parse(args) match {
-      case Right(c) =>
-        {
-          if (!StatTypes.contains(c.statstype)) {
-            System.err.println("Stats type: " + c.statstype + " unknown.")
-            System.exit(2)
-          }
+  val mkJC = classOf[JCommander].getConstructors.filter(_.getParameterTypes.length==1)
+  val jc = mkJC.head.newInstance(CommandMain).asInstanceOf[JCommander]
+  jc.addCommand("player", CommandPlayer)
+  jc.addCommand("matches", CommandMatches)
+  jc.addCommand("match", CommandMatch)
 
-          c.command match {
-            case "player" => {
-              outputPlayer(c)
-            }
-            case "matches" => {
-              outputMatches(c)
-            }
-            case "match" => {
-              outputMatch(c)
-            }
-            case x => {
-              println("Unknown command: '" + x + "'")
-              println("Allowed commands: " + commands.mkString(","))
-            }
-          }
-        }
-      case Left(xs) =>
-    }
+  jc.parse(args.toArray: _*)
+
+  try {
+	  jc.getParsedCommand() match {
+	    case "player" => {
+	      outputPlayer(CommandPlayer.nicks.toList)
+	    }
+	    case "matches" => {
+	      outputMatches(CommandMatches.nicks.toList)
+	    }
+	    case "match" => {
+	      outputMatch(CommandMatch.matchids.toList)
+	    }
+	    case null => {
+	      print(jc.usage())
+	    }
+	  }
   } finally {
     StatsFactory.dispose
   }
 
-  def outputPlayer(config: Configuration) = {
-    val players = StatsFactory.getPlayerStatsByNick(config.items)
+  def outputPlayer(nicknames: List[String]) = {
+    val players = StatsFactory.getPlayerStatsByNick(nicknames)
 
     val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s"
     val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d"
-    config.statstype match {
+    CommandMain.statstype match {
       case "ranked" =>
         println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "MGP", "AID"))
         players.foreach(p =>
@@ -104,14 +110,14 @@ object HoNStats extends App {
     }
   }
 
-  def outputMatches(config: Configuration) = {
-    val players = StatsFactory.getPlayerStatsByNickCached(config.items)
+  def outputMatches(nicknames: List[String]) = {
+    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
 
     for (player <- players) {
-      val matches = player.getPlayedMatches(config.statstype, config.limit)
+      val matches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
 
       println(player.attribute(PlayerAttr.NICKNAME))
-      val showmatches = matches.reverse.take(config.limit)
+      val showmatches = matches.reverse.take(CommandMain.limit)
       println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s".format(
         "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
       for (outmatch <- showmatches) {
@@ -135,8 +141,8 @@ object HoNStats extends App {
     }
   }
 
-  def outputMatch(config: Configuration) = {
-    val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- config.items) yield matchid.toInt)
+  def outputMatch(matchids: List[String]) = {
+    val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- matchids) yield matchid.toInt)
 
     for (game <- matches) {
       println("Match %d -- %s - GD: %s".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
