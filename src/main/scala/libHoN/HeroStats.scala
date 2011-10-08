@@ -111,6 +111,10 @@ object HeroAttr {
       197 -> "Monkey King",
       201 -> "Drunken Master",
       202 -> "Master of Arms",
-      203 -> "Rhapsody"
+      203 -> "Rhapsody",
+      204 -> "Geomancer",
+      205 -> "Midas",
+      206 -> "Cthulhuphant",
+      207 -> "Monarch"
       )
 }
