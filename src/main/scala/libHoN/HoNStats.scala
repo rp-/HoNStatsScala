@@ -38,6 +38,7 @@ object HoNStats extends App {
   Log.level = Log.Level.INFO
 
   val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
+  val outBuffer = new StringBuilder()
 
   // jcommander has an ambiguous constructor for scala
   // so we have to use reflection to create it
@@ -70,21 +71,25 @@ object HoNStats extends App {
         e.printStackTrace()
       else
         println("HoNStats couldn't perform your request")
+        System.exit(1)
     }
   } finally {
     StatsFactory.dispose
   }
 
+  // finally print the output
+  println(outBuffer)
+
   def outputPlayer(nicknames: List[String]) = {
     val players = StatsFactory.getPlayerStatsByNick(nicknames)
 
-    val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s"
-    val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d"
+    val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s\n"
+    val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d\n"
     CommandMain.statstype match {
       case "ranked" =>
-        println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "MGP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "MGP", "AID"))
         players.foreach(p =>
-          println(sPlOutput.format(
+          outBuffer.append(sPlOutput.format(
             p.attribute(PlayerAttr.NICKNAME),
             p.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
             p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
@@ -94,10 +99,10 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt,
             p.getAID.toInt)))
       case "public" =>
-        println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "GP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "GP", "AID"))
 
         players.foreach(p =>
-          println(sPlOutput.format(
+          outBuffer.append(sPlOutput.format(
             p.attribute(PlayerAttr.NICKNAME),
             p.attribute(PlayerAttr.SKILL).toFloat.toInt,
             p.attribute(PlayerAttr.HEROKILLS).toInt,
@@ -107,10 +112,10 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.GAMES_PLAYED).toInt,
             p.getAID.toInt)))
       case "casual" =>
-        println(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "CGP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "CGP", "AID"))
 
         players.foreach(p =>
-          println(sPlOutput.format(
+          outBuffer.append(sPlOutput.format(
             p.attribute(PlayerAttr.NICKNAME),
             p.attribute(PlayerAttr.CS_AMM_TEAM_RATING).toFloat.toInt,
             p.attribute(PlayerAttr.CS_HEROKILLS).toInt,
@@ -128,15 +133,15 @@ object HoNStats extends App {
     for (player <- players) {
       val matches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
 
-      println(player.attribute(PlayerAttr.NICKNAME))
+      outBuffer.append(player.attribute(PlayerAttr.NICKNAME) + "\n")
       val showmatches = matches.reverse.take(CommandMain.limit)
-      println(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s".format(
+      outBuffer.append(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
         "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
       for (outmatch <- showmatches) {
         Log.debug(outmatch.getMatchID.toString)
         val game_mins: Int = outmatch.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
         val gpm = if (game_mins > 0) outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0
-        println(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d".format(
+        outBuffer.append(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d\n".format(
           outmatch.getMatchID,
           outmatch.getGameDuration,
           dateFormat.format(outmatch.getLocalMatchDateTime),
@@ -157,14 +162,14 @@ object HoNStats extends App {
     val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- matchids) yield matchid.toInt)
 
     for (game <- matches) {
-      println("Match %d -- %s - GD: %s".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
+      outBuffer.append("Match %d -- %s - GD: %s\n".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
 
       val winTeam = game.getWinningTeam()
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
       val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
 
-      println("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s".format(
+      outBuffer.append("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s\n".format(
           sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
 
       val legionPlayers = StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
@@ -184,7 +189,7 @@ object HoNStats extends App {
 
       val hellPlayers = StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
       val hellStrings = for (player <- hellPlayers) yield
-        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d".format(
+        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d\n".format(
           player.attribute(PlayerAttr.RANK_AMM_TEAM_RATING).toFloat.toInt,
           game.getPlayerMatchStat(player.getAID, "nickname"),
           HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
@@ -202,12 +207,12 @@ object HoNStats extends App {
       for (i <- 0 until size) {
         val hellLine = if(i < hellStrings.size) hellStrings(i) else ""
         if(i < legionStrings.size) {
-          println(legionStrings(i) + hellLine)
+          outBuffer.append(legionStrings(i) + hellLine)
         } else {
-          println("%-35s".format(" ") + hellLine)
+          outBuffer.append("%-35s".format(" ") + hellLine)
         }
       }
-      println("--")
+      outBuffer.append("--\n")
     }
   }
 }
