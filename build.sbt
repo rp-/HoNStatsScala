@@ -4,7 +4,7 @@ version := "0.3"
 
 organization := "com.oldsch00l"
 
-scalaVersion := "2.9.0"
+scalaVersion := "2.9.1"
 
 seq(ProguardPlugin.proguardSettings :_*)
 
