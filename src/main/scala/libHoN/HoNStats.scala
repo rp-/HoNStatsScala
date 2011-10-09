@@ -21,19 +21,19 @@ object CommandMain {
 
 @Parameters(separators = "=", commandDescription = "Show player stats")
 object CommandPlayer {
-  @Parameter(description = "Nicknames to show stats")
+  @Parameter(required = true, description = "Nicknames to show stats")
   var nicks: java.util.List[String] = null
 }
 
 @Parameters(separators = "=", commandDescription = "Show matches of player")
 object CommandMatches {
-  @Parameter(description = "Nicknames")
+  @Parameter(required = true, description = "Nicknames")
   var nicks: java.util.List[String] = null
 }
 
 @Parameters(separators = "=", commandDescription = "Show stats for a match")
 object CommandMatch {
-  @Parameter(description = "Matchid's to show matches")
+  @Parameter(required = true, description = "Matchid's to show matches")
   var matchids: java.util.List[String] = null
 }
 
