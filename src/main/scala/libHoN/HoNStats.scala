@@ -47,6 +47,7 @@ object HoNStats extends App {
   // so we have to use reflection to create it
   val mkJC = classOf[JCommander].getConstructors.filter(_.getParameterTypes.length==1)
   val jc = mkJC.head.newInstance(CommandMain).asInstanceOf[JCommander]
+  jc.setProgramName("HoNStats")
   jc.addCommand("player", CommandPlayer)
   jc.addCommand("matches", CommandMatches)
   jc.addCommand("match", CommandMatch)
