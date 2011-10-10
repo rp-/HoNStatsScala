@@ -98,7 +98,7 @@ object StatsFactory extends Actor {
       }
 
       for (query <- createQueryList(fetchids)) {
-        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
+        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query, fetchids)
         curWorker += 1
         if (curWorker == workers.size)
           curWorker = 0
@@ -113,7 +113,8 @@ object StatsFactory extends Actor {
     //val parfetchids = fetchids.par
     //val res = parfetchids.map(id => fetchMachStats(id)).toList
     res.foreach(m => m.cacheEntry(connection))
-    return (cached ::: res).sortWith((m1, m2) => (m1.getMatchID < m2.getMatchID))
+    val emptyless = res.filter( m => !m.isEmpty) ::: cached.filter( m => !m.isEmpty)
+    return emptyless.sortWith((m1, m2) => (m1.getMatchID < m2.getMatchID))
   }
 
   private def fetchMatchStats(id: Int): MatchStats = {
@@ -141,7 +142,7 @@ object StatsFactory extends Actor {
     this ! "EXIT"
   }
 
-  case class QueryArgs(query: String)
+  case class QueryArgs(query: String, ids : List[Int])
   case class Result(stats: List[MatchStats])
   var inProgress = 0
   var m_results: List[MatchStats] = Nil
@@ -172,7 +173,12 @@ object StatsFactory extends Actor {
           case msg: QueryArgs => {
             val xmlData = XML.load(msg.query)
             val result = (for { match_ <- (xmlData \ "stats" \ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList
-            StatsFactory ! Result(result)
+            if(result.isEmpty) {
+              val emptyRes = (for { id <- msg.ids } yield new MatchStats(id, "<match id=\"" + id + "\" />")).toList
+              StatsFactory ! Result(emptyRes)
+            }
+            else
+              StatsFactory ! Result(result)
           }
         }
       }

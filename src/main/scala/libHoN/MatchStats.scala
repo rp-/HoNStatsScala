@@ -11,6 +11,8 @@ class MatchStats(MatchID: Int, matchData: String) {
   def getMatchID = this.MatchID
   lazy val xmlMatchData: scala.xml.Node = XML.loadString(matchData)
 
+  lazy val isEmpty: Boolean = (xmlMatchData \ "summ").isEmpty
+
   def isCached(conn: java.sql.Connection) = {
     val query = "SELECT mid FROM MatchStats WHERE mid = " + MatchID
     val s = conn.createStatement
