@@ -1,9 +1,10 @@
 package libHoN
 
-import scala.xml._;
+import scala.xml._
 import scala.actors.Actor
 import scala.actors.Actor._
 import java.sql.{ Connection, DriverManager, ResultSet };
+import scala.actors.DaemonActor
 
 object StatsFactory extends Actor {
   //load db driver
@@ -160,7 +161,7 @@ object StatsFactory extends Actor {
     }
   }
 
-  class WorkerActor extends Actor {
+  class WorkerActor extends DaemonActor {
     def act() {
       loop {
         react {
