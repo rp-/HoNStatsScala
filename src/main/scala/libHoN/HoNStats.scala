@@ -57,7 +57,7 @@ object HoNStats extends App {
   jc.addCommand("player", CommandPlayer)
   jc.addCommand("matches", CommandMatches)
   jc.addCommand("match", CommandMatch)
-  jc.addCommand("player-heros", CommandPlayerHeroes);
+  jc.addCommand("player-heroes", CommandPlayerHeroes);
 
   try {
     jc.parse(args.toArray: _*)
@@ -71,7 +71,7 @@ object HoNStats extends App {
       case "match" => {
         outputMatch(CommandMatch.matchids.toList)
       }
-      case "player-heros" => {
+      case "player-heroes" => {
         outputPlayerHeroes(CommandPlayerHeroes.nicks.toList)
       }
       case null => {
