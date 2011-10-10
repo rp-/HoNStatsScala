@@ -1,10 +1,13 @@
 package libHoN
 
-import scala.xml._;
-
+import scala.xml._
 import oldsch00l.Log
+import scala.collection.mutable.HashMap
 
 class PlayerStats(playerData: scala.xml.Node) {
+
+  val MatchIDMap = new HashMap[String,List[Int]]
+
   def attribute(name: String): String = {
     (playerData \ "stat").filter(attributeNameValueEquals(name)).text
   }
@@ -15,25 +18,88 @@ class PlayerStats(playerData: scala.xml.Node) {
 
   lazy val getAID: String = playerData.attribute("aid").get.text;
 
+  def getPlayedMatchIds(statstype: String) : List[Int] = {
+    val mIds = getCachedMatchIDs(StatsFactory.connection, statstype)
+
+    if( !MatchIDMap.contains(statstype) ) {
+	    if( !isCurrent(StatsFactory.connection) ) {
+	        val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
+	        val xmlData = XML.load(query)
+	        assert(xmlData != Nil)
+	        MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
+	        val cacheMatchIDsList = MatchIDMap(statstype) filterNot ((for { m <- mIds } yield m) contains)
+	        cacheMatchIDs(StatsFactory.connection, statstype, cacheMatchIDsList)
+	    } else {
+          MatchIDMap(statstype) = mIds
+	    }
+    }
+//    println("Matches: " + MatchIDMap(statstype).size)
+    return MatchIDMap(statstype)
+  }
+
   def getPlayedMatches(statstype: String, maxMatches: Int = 0): List[MatchStats] = {
-    val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
-    val xmlData = XML.load(query)
-    assert(xmlData != Nil)
-    val mids = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
+    val mids = getPlayedMatchIds(statstype)
     val matches = StatsFactory.getMatchStatsByMatchId(if (maxMatches > 0) mids.reverse.take(maxMatches) else mids)
     //println(matches.size + ":" + mids.size)
     //assert(matches.size == mids.size)
-    matches
+    return matches
+  }
+
+  def getPlayedHeros(statstype: String): List[PlayerHeroStats] = {
+    val playedMatches = getPlayedMatches(statstype)
+
+    val playedHeros = new HashMap[Int, PlayerHeroStats]()
+
+    var count = 0
+    for (game <- playedMatches ) {
+      val heroID = game.getPlayerMatchStatAsInt(getAID, "hero_id")
+      if( playedHeros.get(heroID) == None )
+        playedHeros(heroID) = new PlayerHeroStats(heroID)
+      count += 1
+      playedHeros(heroID).incUsed
+      playedHeros(heroID).incKills(game.getPlayerMatchStatAsInt(getAID, "herokills"))
+      playedHeros(heroID).incDeaths(game.getPlayerMatchStatAsInt(getAID, "deaths"))
+      playedHeros(heroID).incAssists(game.getPlayerMatchStatAsInt(getAID, "heroassists"))
+      playedHeros(heroID).addWinLose(game.playerWon(getAID))
+    }
+//    println("played: " + count)
+    return playedHeros.values.toList
   }
 
   def isCurrent(conn: java.sql.Connection): Boolean = {
-    val dbEntry = PlayerStatsSql.getEntries(conn, List(attribute(PlayerAttr.NICKNAME)))
-    if (dbEntry.isEmpty) {
-      return false
-    } else {
-      val dbPlayer = dbEntry.head
-      //TODO look for last insertDate
-      return dbPlayer.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt == attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt
+    val query = "select count(*) as co FROM playerstats WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now');"
+    val ps = conn.prepareStatement(query)
+    ps.setInt(1, getAID.toInt)
+    val rs = ps.executeQuery()
+    return rs.getInt("co") > 0
+  }
+
+  def getCachedMatchIDs(conn: java.sql.Connection, statstype: String): List[Int] = {
+    val query = "SELECT matchid FROM playermatches WHERE aid=" + getAID + " and statstype='" + statstype + "';"
+    val resList = SQLHelper.queryEach(conn, query) { rs =>
+      rs.getInt("matchid")
+    }
+    return resList
+  }
+
+  def cacheMatchIDs(conn: java.sql.Connection, statstype: String, ids: List[Int]) = {
+    for( id <- ids ) {
+      val query = "INSERT INTO PLAYERMATCHES ( aid, statstype, matchid ) VALUES ( ?, ?, ?);"
+      val ps = conn.prepareStatement(query)
+      ps.setInt(1, getAID.toInt)
+      ps.setString(2, statstype)
+      ps.setInt(3, id)
+
+      try {
+        val inserts = ps.executeUpdate
+      } catch {
+        case see: java.sql.SQLSyntaxErrorException => {
+          Log.error("ERROR(" + getAID + ": " + query)
+        }
+        case x => {
+          Log.error("ERROR")
+        }
+      }
     }
   }
 
@@ -44,6 +110,7 @@ class PlayerStats(playerData: scala.xml.Node) {
       ps.setInt(1, getAID.toInt)
       ps.setString(2, attribute(PlayerAttr.NICKNAME))
       ps.setString(3, playerData.toString)
+
       try {
         val inserts = ps.executeUpdate
       } catch {
@@ -73,7 +140,15 @@ object PlayerStatsSql {
              nickname TEXT,
              insertDate TIMESTAMP,
              xmlData TEXT
-           )""")
+           );""")
+
+      query.execute(
+        """CREATE TABLE IF NOT EXISTS PLAYERMATCHES (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            statstype TEXT,
+            aid INTEGER,
+            matchid integer
+          );""")
       query close
     }
   }
@@ -88,7 +163,7 @@ object PlayerStatsSql {
       }
       if (!resList.isEmpty) entries ::= resList.head
     }
-    entries
+    entries.filter( p => p.isCurrent(conn) )
   }
 
   def getEntriesByAID(conn: java.sql.Connection, aids: List[Int]): List[PlayerStats] = {
@@ -102,6 +177,40 @@ object PlayerStatsSql {
       if (!resList.isEmpty) entries ::= resList.head
     }
     entries
+  }
+}
+
+class PlayerHeroStats( heroID: Int ) {
+  var used: Int = 0
+  var kills: Int = 0
+  var deaths: Int = 0
+  var assists: Int = 0
+  var wins: Int = 0
+  var loses: Int = 0
+
+  val HeroID = heroID
+
+  def incUsed = {
+    used += 1
+  }
+
+  def incKills(moreKills: Int) = {
+    kills += moreKills
+  }
+
+  def incDeaths(moreDeaths: Int) = {
+    deaths += moreDeaths
+  }
+
+  def incAssists(moreAssists: Int) = {
+    assists += moreAssists
+  }
+
+  def addWinLose(winLose: Boolean) = {
+    if(winLose)
+      wins += 1
+    else
+      loses += 1
   }
 }
 

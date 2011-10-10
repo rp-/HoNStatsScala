@@ -37,6 +37,12 @@ object CommandMatch {
   var matchids: java.util.List[String] = null
 }
 
+@Parameters(separators = "=", commandDescription = "Show played heroes for a player")
+object CommandPlayerHeroes {
+  @Parameter(required = true, description = "Nicknames")
+  var nicks: java.util.List[String] = null
+}
+
 object HoNStats extends App {
   Log.level = Log.Level.INFO
 
@@ -51,6 +57,7 @@ object HoNStats extends App {
   jc.addCommand("player", CommandPlayer)
   jc.addCommand("matches", CommandMatches)
   jc.addCommand("match", CommandMatch)
+  jc.addCommand("player-heros", CommandPlayerHeroes);
 
   try {
     jc.parse(args.toArray: _*)
@@ -63,6 +70,9 @@ object HoNStats extends App {
 	    }
 	    case "match" => {
 	      outputMatch(CommandMatch.matchids.toList)
+	    }
+	    case "player-heros" => {
+	      outputPlayerHeroes(CommandPlayerHeroes.nicks.toList)
 	    }
 	    case null => {
 	      print(jc.usage())
@@ -87,7 +97,7 @@ object HoNStats extends App {
   println(outBuffer)
 
   def outputPlayer(nicknames: List[String]) = {
-    val players = StatsFactory.getPlayerStatsByNick(nicknames)
+    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
 
     val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s\n"
     val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d\n"
@@ -226,6 +236,35 @@ object HoNStats extends App {
         }
       }
       outBuffer.append("--\n")
+    }
+  }
+
+  def outputPlayerHeroes(nicknames: List[String]) = {
+    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
+
+    for (player <- players) {
+      val playedHeros = player.getPlayedHeros(CommandMain.statstype)
+
+      val sortedHeros = playedHeros.sortWith((h1, h2) => h1.used > h2.used)
+      val matches = player.getPlayedMatches(CommandMain.statstype)
+
+      outBuffer.append(player.attribute(PlayerAttr.NICKNAME))
+      outBuffer.append('\n')
+      outBuffer.append("%-20s %-3s %-2s %3s  %3s  %3s    %-3s %-2s %-2s\n".
+        format("Hero", "Use", " %", "K", "D", "A", "KDR", " W", " L"))
+      for (hero <- if (CommandMain.limit > 0) sortedHeros.take(CommandMain.limit) else sortedHeros) {
+        outBuffer.append("%-20s %3d %2d %4d %4d %4d %5.2f %2d %2d\n".format(
+          HeroAttr.IDMap(hero.HeroID),
+          hero.used,
+          ((hero.used.toFloat / matches.size.toFloat) * 100).toInt,
+          hero.kills,
+          hero.deaths,
+          hero.assists,
+          (hero.kills.toFloat / hero.deaths.toFloat),
+          hero.wins,
+          hero.loses)
+        )
+      }
     }
   }
 }
