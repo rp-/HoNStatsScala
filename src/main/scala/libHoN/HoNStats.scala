@@ -61,33 +61,33 @@ object HoNStats extends App {
 
   try {
     jc.parse(args.toArray: _*)
-	  jc.getParsedCommand() match {
-	    case "player" => {
-	      outputPlayer(CommandPlayer.nicks.toList)
-	    }
-	    case "matches" => {
-	      outputMatches(CommandMatches.nicks.toList)
-	    }
-	    case "match" => {
-	      outputMatch(CommandMatch.matchids.toList)
-	    }
-	    case "player-heros" => {
-	      outputPlayerHeroes(CommandPlayerHeroes.nicks.toList)
-	    }
-	    case null => {
-	      print(jc.usage())
-	    }
-	  }
+    jc.getParsedCommand() match {
+      case "player" => {
+        outputPlayer(CommandPlayer.nicks.toList)
+      }
+      case "matches" => {
+        outputMatches(CommandMatches.nicks.toList)
+      }
+      case "match" => {
+        outputMatch(CommandMatch.matchids.toList)
+      }
+      case "player-heros" => {
+        outputPlayerHeroes(CommandPlayerHeroes.nicks.toList)
+      }
+      case null => {
+        print(jc.usage())
+      }
+    }
   } catch {
-    case e:ParameterException => {
+    case e: ParameterException => {
       print(jc.usage())
     }
     case e => {
-      if(CommandMain.debug)
+      if (CommandMain.debug)
         e.printStackTrace()
       else
         println("HoNStats couldn't perform your request")
-        System.exit(1)
+      System.exit(1)
     }
   } finally {
     StatsFactory.dispose
