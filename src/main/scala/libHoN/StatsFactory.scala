@@ -89,16 +89,16 @@ object StatsFactory extends Actor {
       workers.foreach(w => w.start)
 
       var curWorker = 0
-      def createQueryList(ids: List[Int]): List[String] = ids match {
+      def createQueryList(ids: List[Int]): List[List[Int]] = ids match {
         case List() => List()
         case x => {
           val qSize = 50
-          x.take(qSize).mkString("&mid[]=") :: createQueryList(x.drop(qSize))
+          x.take(qSize) :: createQueryList(x.drop(qSize))
         }
       }
 
-      for (query <- createQueryList(fetchids)) {
-        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query, fetchids)
+      for (ids <- createQueryList(fetchids)) {
+        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + ids.mkString("&mid[]="), ids)
         curWorker += 1
         if (curWorker == workers.size)
           curWorker = 0
@@ -173,7 +173,7 @@ object StatsFactory extends Actor {
           case msg: QueryArgs => {
             val xmlData = XML.load(msg.query)
             val result = (
-                for ( match_ <- (xmlData \ "stats" \ "match") if !(match_ \ "summ").isEmpty )
+                for ( match_ <- (xmlData \ "stats" \ "match") if !match_.isEmpty )
                   yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)
             ).toList
             val emptyids = msg.ids filterNot ((for { m <- result } yield m.getMatchID) contains)
