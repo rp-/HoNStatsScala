@@ -40,7 +40,7 @@ object CommandMatch {
 object HoNStats extends App {
   Log.level = Log.Level.INFO
 
-  val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
+  lazy val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
   val outBuffer = new StringBuilder()
 
   // jcommander has an ambiguous constructor for scala
