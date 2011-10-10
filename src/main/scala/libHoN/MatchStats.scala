@@ -4,14 +4,15 @@ import java.sql._;
 import scala.xml._;
 import oldsch00l.Log;
 
-class MatchStats(MatchID: Int, matchData: String) {
+class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
   require(MatchID.isValidInt)
   Log.debug(matchData)
   override def toString = matchData.toString
   def getMatchID = this.MatchID
   lazy val xmlMatchData: scala.xml.Node = XML.loadString(matchData)
 
-  lazy val isEmpty: Boolean = (xmlMatchData \ "summ").isEmpty
+  val emptyString = "<match />"
+  val isEmpty = empty
 
   def isCached(conn: java.sql.Connection) = {
     val query = "SELECT mid FROM MatchStats WHERE mid = " + MatchID
@@ -151,25 +152,12 @@ object MatchPlayerAttr {
 }
 
 object MatchStatsSql {
-  def createTable(conn: java.sql.Connection) = {
-    val dmd = conn.getMetaData
-    val rs = dmd.getTables(conn.getCatalog, null, "MATCHSTATS", null)
-    if (!rs.next()) {
-      val query = conn.createStatement
-      query.execute(
-        """CREATE TABLE IF NOT EXISTS MATCHSTATS (
-             mid integer primary key,
-             xmlData TEXT
-           )""")
-      query close
-    }
-  }
-
+  val emptyString = "<match />"
   def getEntries(conn: java.sql.Connection, mid: List[Int]) = {
     if (!mid.isEmpty) {
       val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ") ORDER BY mid"
       SQLHelper.queryEach(conn, query) { rs =>
-        new MatchStats(rs.getInt("mid"), rs.getString("xmlData"))
+        new MatchStats(rs.getInt("mid"), rs.getString("xmlData"), rs.getString("xmlData") == emptyString)
       }
     } else
       Nil

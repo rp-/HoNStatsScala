@@ -7,13 +7,13 @@ import java.sql.{ Connection, DriverManager, ResultSet };
 import scala.actors.DaemonActor
 
 object StatsFactory extends Actor {
-  //load db driver
-  Class.forName("org.sqlite.JDBC").newInstance
-  val connection = DriverManager.getConnection("jdbc:sqlite:statsdb.db")
+  val XMLRequester : String = "http://xml.heroesofnewerth.com/xml_requester.php"
 
-  val XMLRequester = "http://xml.heroesofnewerth.com/xml_requester.php"
-  MatchStatsSql.createTable(connection)
-  PlayerStatsSql.createTable(connection)
+  //load db driver and create tables
+  Class.forName("org.sqlite.JDBC").newInstance
+
+  val connection = DriverManager.getConnection("jdbc:sqlite:statsdb.db")
+  SQLHelper.createTables(connection)
   start
 
   def getPlayerStatsByNickCached(nicks: List[String]): List[PlayerStats] = {
@@ -172,13 +172,13 @@ object StatsFactory extends Actor {
           }
           case msg: QueryArgs => {
             val xmlData = XML.load(msg.query)
-            val result = (for { match_ <- (xmlData \ "stats" \ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList
-            if(result.isEmpty) {
-              val emptyRes = (for { id <- msg.ids } yield new MatchStats(id, "<match id=\"" + id + "\" />")).toList
-              StatsFactory ! Result(emptyRes)
-            }
-            else
-              StatsFactory ! Result(result)
+            val result = (
+                for ( match_ <- (xmlData \ "stats" \ "match") if !(match_ \ "summ").isEmpty )
+                  yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)
+            ).toList
+            val emptyids = msg.ids filterNot ((for { m <- result } yield m.getMatchID) contains)
+            val emptyRes = for ( id <- emptyids ) yield new MatchStats( id, MatchStatsSql.emptyString, true)
+            StatsFactory ! Result(result ::: emptyRes)
           }
         }
       }
@@ -193,6 +193,29 @@ object SQLHelper {
     } finally {
       closeable.close()
     }
+
+  def createTables(conn: java.sql.Connection) {
+    val query = conn.createStatement
+    query.executeUpdate(
+		"""CREATE TABLE IF NOT EXISTS PLAYERSTATS (
+		     ID INTEGER PRIMARY KEY AUTOINCREMENT,
+		     aid integer,
+		     nickname TEXT,
+		     insertDate TIMESTAMP,
+		     xmlData TEXT
+		   );
+		   CREATE TABLE IF NOT EXISTS PLAYERMATCHES (
+		     id INTEGER PRIMARY KEY AUTOINCREMENT,
+		     statstype TEXT,
+		     aid INTEGER,
+		     matchid integer
+		  );
+          CREATE TABLE IF NOT EXISTS MATCHSTATS (
+             mid integer primary key,
+             xmlData TEXT
+          );""")
+	query close
+  }
 
   import scala.collection.mutable.ListBuffer
 
