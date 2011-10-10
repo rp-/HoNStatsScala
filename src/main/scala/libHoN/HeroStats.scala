@@ -23,7 +23,7 @@ object HeroAttr {
     }
   }
   
-  val IDMap = Map( 
+  lazy val IDMap = Map( 
       2 -> "Armadon",
       3 -> "Behemoth",
       4 -> "Chronos",
