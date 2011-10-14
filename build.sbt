@@ -1,6 +1,6 @@
 name := "HoNStats"
 
-version := "0.3"
+version := "0.4"
 
 organization := "com.oldsch00l"
 
