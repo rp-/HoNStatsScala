@@ -39,6 +39,9 @@ object CommandMatch {
 
 @Parameters(separators = "=", commandDescription = "Show played heroes for a player")
 object CommandPlayerHeroes {
+  @Parameter(names = Array("-b", "--sort-by"), description = "Sort by [use,kdr,k,d,a]")
+  var sortBy: String = "use"
+
   @Parameter(required = true, description = "Nicknames")
   var nicks: java.util.List[String] = null
 }
@@ -260,7 +263,17 @@ object HoNStats extends App {
     for (player <- players) {
       val playedHeros = player.getPlayedHeros(CommandMain.statstype)
 
-      val sortedHeros = playedHeros.sortWith((h1, h2) => h1.used > h2.used)
+      def sortHeroes(h1: PlayerHeroStats, h2: PlayerHeroStats) : Boolean = {
+        CommandPlayerHeroes.sortBy match {
+          case "use" => return h1.used > h2.used
+          case "kdr" => return (h1.kills.toFloat / h1.deaths.toFloat) > (h2.kills.toFloat / h2.deaths.toFloat)
+          case "k" => return h1.kills > h2.kills
+          case "d" => return h1.deaths > h2.deaths
+          case "a" => return h1.assists > h2.assists
+        }
+      }
+
+      val sortedHeros = playedHeros.sortWith((h1, h2) => sortHeroes(h1, h2))
       val matches = player.getPlayedMatches(CommandMain.statstype)
 
       outBuffer.append(player.attribute(PlayerAttr.NICKNAME))
