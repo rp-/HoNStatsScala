@@ -99,11 +99,11 @@ object HoNStats extends App {
   def outputPlayer(nicknames: List[String]) = {
     val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
 
-    val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-5s %4s %s\n"
-    val sPlOutput = "%-10s %-5d %4d/%4d/%4d %5.2f  %4d %d\n"
+    val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-3s %-4s  %-4s %4s %2s\n"
+    val sPlOutput = "%-10s %-5d %4d/%4d/%4d %4.1f %4.1f %5.2f %4d %2.0f\n"
     CommandMain.statstype match {
       case "ranked" =>
-        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "MGP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "W/G", "CD", "KDR", "MGP", "W%"))
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
             p.attribute(PlayerAttr.NICKNAME),
@@ -111,11 +111,16 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
             p.attribute(PlayerAttr.RANK_DEATHS).toInt,
             p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
-            (p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat),
-            p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt,
-            p.getAID.toInt)))
+            p.attribute(PlayerAttr.RANK_WARDS).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, // Wards per game
+            p.attribute(PlayerAttr.RANK_DENIES).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat, // KDR
+            p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, //MGP
+            p.attribute(PlayerAttr.RANK_WINS).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toFloat * 100 // W%
+            )
+          )
+        )
       case "public" =>
-        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "GP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "W/G", "CD", "KDR", "GP", "W%"))
 
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
@@ -124,11 +129,16 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.HEROKILLS).toInt,
             p.attribute(PlayerAttr.DEATHS).toInt,
             p.attribute(PlayerAttr.HEROASSISTS).toInt,
-            (p.attribute(PlayerAttr.HEROKILLS).toFloat / p.attribute(PlayerAttr.DEATHS).toFloat),
-            p.attribute(PlayerAttr.GAMES_PLAYED).toInt,
-            p.getAID.toInt)))
+            p.attribute(PlayerAttr.WARDS).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // Wards per game
+            p.attribute(PlayerAttr.DENIES).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.HEROKILLS).toFloat / p.attribute(PlayerAttr.DEATHS).toFloat, // KDR
+            p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // GP
+            p.attribute(PlayerAttr.WINS).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toFloat * 100 // W%
+            )
+          )
+        )
       case "casual" =>
-        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "KDR", "CGP", "AID"))
+        outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "W/G", "CD", "KDR", "CGP", "W%"))
 
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
@@ -137,9 +147,14 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.CS_HEROKILLS).toInt,
             p.attribute(PlayerAttr.CS_DEATHS).toInt,
             p.attribute(PlayerAttr.CS_HEROASSISTS).toInt,
-            (p.attribute(PlayerAttr.CS_HEROKILLS).toFloat / p.attribute(PlayerAttr.CS_DEATHS).toFloat),
-            p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt,
-            p.getAID.toInt)))
+            p.attribute(PlayerAttr.CS_WARDS).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // Wards per game
+            p.attribute(PlayerAttr.CS_DENIES).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.CS_HEROKILLS).toFloat / p.attribute(PlayerAttr.CS_DEATHS).toFloat, // KDR
+            p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // CGP
+            p.attribute(PlayerAttr.CS_WINS).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toFloat * 100 // W%
+            )
+          )
+        )
     }
   }
 
