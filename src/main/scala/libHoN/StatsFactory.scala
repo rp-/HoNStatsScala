@@ -12,8 +12,12 @@ object StatsFactory extends Actor {
   //load db driver and create tables
   Class.forName("org.sqlite.JDBC").newInstance
 
+  val createDB = !(new java.io.File("statsdb.db").exists())
   val connection = DriverManager.getConnection("jdbc:sqlite:statsdb.db")
-  SQLHelper.createTables(connection)
+  if( createDB )
+    SQLHelper.createTables(connection)
+  else
+    SQLHelper.upgradeDB(connection)
   start
 
   def getPlayerStatsByNickCached(nicks: List[String]): List[PlayerStats] = {
@@ -187,6 +191,8 @@ object StatsFactory extends Actor {
 }
 
 object SQLHelper {
+  val DBVERSION = 1
+
   def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
     try {
       getB(closeable)
@@ -197,24 +203,59 @@ object SQLHelper {
   def createTables(conn: java.sql.Connection) {
     val query = conn.createStatement
     query.executeUpdate(
-		"""CREATE TABLE IF NOT EXISTS PLAYERSTATS (
+      """CREATE TABLE IF NOT EXISTS dbmeta (
+         key TEXT PRIMARY KEY,
+         value TEXT
+       );
+       CREATE TABLE IF NOT EXISTS playerstats (
 		     ID INTEGER PRIMARY KEY AUTOINCREMENT,
 		     aid integer,
 		     nickname TEXT,
 		     insertDate TIMESTAMP,
 		     xmlData TEXT
 		   );
-		   CREATE TABLE IF NOT EXISTS PLAYERMATCHES (
+		   CREATE TABLE IF NOT EXISTS playermatches (
 		     id INTEGER PRIMARY KEY AUTOINCREMENT,
 		     statstype TEXT,
 		     aid INTEGER,
 		     matchid integer
 		  );
-          CREATE TABLE IF NOT EXISTS MATCHSTATS (
-             mid integer primary key,
-             xmlData TEXT
-          );""")
-	query close
+      CREATE TABLE IF NOT EXISTS matchstats (
+         mid integer primary key,
+         xmlData TEXT
+      );
+      INSERT INTO dbmeta (key, value) VALUES ('version', '""" + DBVERSION + "');")
+    query close
+  }
+
+  def upgradeDB(conn: java.sql.Connection) {
+    var dbversion = 0
+    try {
+      val prepStm = conn.prepareStatement("SELECT value FROM dbmeta WHERE key='version';")
+      val rs = prepStm.executeQuery
+      dbversion = if (rs.next) rs.getInt("value") else 0
+      rs.close
+    } catch {
+      case e: java.sql.SQLException => {
+
+      }
+    }
+
+    dbversion match {
+      case 0 => {
+        val insert = conn.createStatement()
+        insert.executeUpdate(
+          """CREATE TABLE IF NOT EXISTS dbmeta (
+                 key TEXT PRIMARY KEY,
+                 value TEXT
+               );
+               INSERT INTO dbmeta (key, value) VALUES ('version', '""" + DBVERSION + "');")
+        insert.close
+      }
+      case _ => {
+
+      }
+    }
   }
 
   import scala.collection.mutable.ListBuffer
