@@ -125,11 +125,11 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.RANK_HEROKILLS).toInt,
             p.attribute(PlayerAttr.RANK_DEATHS).toInt,
             p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
-            p.attribute(PlayerAttr.RANK_WARDS).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, // Wards per game
-            p.attribute(PlayerAttr.RANK_DENIES).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.RANK_WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.attribute(PlayerAttr.RANK_DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
             p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat, // KDR
-            p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt, //MGP
-            p.attribute(PlayerAttr.RANK_WINS).toFloat / p.attribute(PlayerAttr.RANK_GAMES_PLAYED).toFloat * 100 // W%
+            p.gamesplayed(CommandMain.statstype), //MGP
+            p.attribute(PlayerAttr.RANK_WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
@@ -143,11 +143,11 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.HEROKILLS).toInt,
             p.attribute(PlayerAttr.DEATHS).toInt,
             p.attribute(PlayerAttr.HEROASSISTS).toInt,
-            p.attribute(PlayerAttr.WARDS).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // Wards per game
-            p.attribute(PlayerAttr.DENIES).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.attribute(PlayerAttr.DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
             p.attribute(PlayerAttr.HEROKILLS).toFloat / p.attribute(PlayerAttr.DEATHS).toFloat, // KDR
-            p.attribute(PlayerAttr.GAMES_PLAYED).toInt, // GP
-            p.attribute(PlayerAttr.WINS).toFloat / p.attribute(PlayerAttr.GAMES_PLAYED).toFloat * 100 // W%
+            p.gamesplayed(CommandMain.statstype), // GP
+            p.attribute(PlayerAttr.WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
@@ -161,11 +161,11 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.CS_HEROKILLS).toInt,
             p.attribute(PlayerAttr.CS_DEATHS).toInt,
             p.attribute(PlayerAttr.CS_HEROASSISTS).toInt,
-            p.attribute(PlayerAttr.CS_WARDS).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // Wards per game
-            p.attribute(PlayerAttr.CS_DENIES).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // Creep denies
+            p.attribute(PlayerAttr.CS_WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.attribute(PlayerAttr.CS_DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
             p.attribute(PlayerAttr.CS_HEROKILLS).toFloat / p.attribute(PlayerAttr.CS_DEATHS).toFloat, // KDR
-            p.attribute(PlayerAttr.CS_GAMES_PLAYED).toInt, // CGP
-            p.attribute(PlayerAttr.CS_WINS).toFloat / p.attribute(PlayerAttr.CS_GAMES_PLAYED).toFloat * 100 // W%
+            p.gamesplayed(CommandMain.statstype), // CGP
+            p.attribute(PlayerAttr.CS_WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
