@@ -17,6 +17,9 @@ object CommandMain {
 
   @Parameter(names = Array("-f", "--fetch"), description = "Don't use cache")
   var fetch: Boolean = false
+
+  @Parameter(names = Array("-q", "--quiet"), description = "Tries to minimize output lines for errors/warnings")
+  var quiet: Boolean = false
 }
 
 @Parameters(separators = "=", commandDescription = "Show player stats")
@@ -62,6 +65,13 @@ object HoNStats extends App {
   jc.addCommand("match", CommandMatch)
   jc.addCommand("player-heroes", CommandPlayerHeroes);
 
+  def printHelp() = {
+    if(CommandMain.quiet)
+      println("Misusage of HoNStats see https://github.com/rp-/HoNStats for details")
+    else
+     jc.usage()
+  }
+
   try {
     jc.parse(args.toArray: _*)
     jc.getParsedCommand() match {
@@ -78,12 +88,13 @@ object HoNStats extends App {
         outputPlayerHeroes(CommandPlayerHeroes.nicks.toList)
       }
       case null => {
-        print(jc.usage())
+        printHelp
       }
     }
   } catch {
     case e: ParameterException => {
-      print(jc.usage())
+      printHelp
+      System.exit(1)
     }
     case e => {
       if (CommandMain.debug)
