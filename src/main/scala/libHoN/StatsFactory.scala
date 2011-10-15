@@ -191,7 +191,7 @@ object StatsFactory extends Actor {
 }
 
 object SQLHelper {
-  val DBVERSION = 1
+  val DBVERSION = 2
 
   def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
     try {
@@ -212,6 +212,7 @@ object SQLHelper {
 		     aid integer,
 		     nickname TEXT,
 		     insertDate TIMESTAMP,
+         gamesplayed INTEGER,
 		     xmlData TEXT
 		   );
 		   CREATE TABLE IF NOT EXISTS playermatches (
@@ -241,21 +242,26 @@ object SQLHelper {
       }
     }
 
-    dbversion match {
-      case 0 => {
-        val insert = conn.createStatement()
-        insert.executeUpdate(
-          """CREATE TABLE IF NOT EXISTS dbmeta (
+    if (dbversion == 0) {
+      val insert = conn.createStatement()
+      insert.executeUpdate(
+        """CREATE TABLE IF NOT EXISTS dbmeta (
                  key TEXT PRIMARY KEY,
                  value TEXT
                );
                INSERT INTO dbmeta (key, value) VALUES ('version', '""" + DBVERSION + "');")
-        insert.close
-      }
-      case _ => {
-
-      }
+      insert.close
     }
+
+    if (dbversion <= 1) {
+      val update = conn.createStatement
+      update.executeUpdate("ALTER TABLE playerstats ADD COLUMN gamesplayed INTEGER;")
+      update.close
+    }
+
+    val updateVersion = conn.createStatement
+    updateVersion.executeUpdate("UPDATE dbmeta SET value='" + DBVERSION + "' WHERE key='version';")
+    updateVersion.close
   }
 
   import scala.collection.mutable.ListBuffer

@@ -66,10 +66,19 @@ class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
     return playedHeros.values.toList
   }
 
+  /**
+   * Returns if the player is current enough.
+   *
+   * @param conn Connection to our database
+   * @return True if the player is recent enough in the database.
+   */
   def isCurrent(conn: java.sql.Connection): Boolean = {
-    val query = "select count(*) as co FROM playerstats WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now');"
+    val query = "select count(*) as co FROM playerstats " +
+      "WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now') " +
+      "OR IFNULL(gamesplayed, 0) == ?;"
     val ps = conn.prepareStatement(query)
     ps.setInt(1, getAID.toInt)
+    ps.setInt(2, gamesplayed("all"))
     val rs = ps.executeQuery()
     return rs.getInt("co") > 0
   }
@@ -105,11 +114,12 @@ class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
 
   def cacheEntry(conn: java.sql.Connection) = {
     if (!isCurrent(conn)) {
-      val query = "INSERT INTO PLAYERSTATS ( aid, nickname, insertDate, xmlData) VALUES ( ?, ?, DATETIME('NOW'), ?);"
+      val query = "INSERT INTO PLAYERSTATS ( aid, nickname, insertDate, gamesplayed, xmlData) VALUES ( ?, ?, DATETIME('NOW'), ?, ?);"
       val ps = conn.prepareStatement(query)
       ps.setInt(1, getAID.toInt)
       ps.setString(2, attribute(PlayerAttr.NICKNAME))
-      ps.setString(3, playerData.toString)
+      ps.setInt(3, gamesplayed("all"))
+      ps.setString(4, playerData.toString)
 
       try {
         val inserts = ps.executeUpdate
@@ -121,6 +131,18 @@ class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
           Log.error("ERROR")
         }
       }
+    }
+  }
+
+  def gamesplayed(statstype: String): Int = {
+    statstype match {
+      case "ranked" => return attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt
+      case "casual" => return attribute(PlayerAttr.CS_GAMES_PLAYED).toInt
+      case "public" => return attribute(PlayerAttr.GAMES_PLAYED).toInt
+      case "all" => return attribute(PlayerAttr.RANK_GAMES_PLAYED).toInt +
+        attribute(PlayerAttr.CS_GAMES_PLAYED).toInt +
+        attribute(PlayerAttr.GAMES_PLAYED).toInt
+      case _ => return 0
     }
   }
 
