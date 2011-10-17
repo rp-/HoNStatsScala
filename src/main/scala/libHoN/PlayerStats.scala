@@ -4,7 +4,7 @@ import scala.xml._
 import oldsch00l.Log
 import scala.collection.mutable.HashMap
 
-class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
+class PlayerStats(playerData: scala.xml.Node) {
 
   val MatchIDMap = new HashMap[String,List[Int]]
 
@@ -22,16 +22,12 @@ class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
     val mIds = getCachedMatchIDs(StatsFactory.connection, statstype)
 
     if( !MatchIDMap.contains(statstype) ) {
-	    if( !isCurrent(StatsFactory.connection) || fresh ) {
-	        val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
-	        val xmlData = XML.load(query)
-	        assert(xmlData != Nil)
-	        MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
-	        val cacheMatchIDsList = MatchIDMap(statstype) filterNot ((for { m <- mIds } yield m) contains)
-	        cacheMatchIDs(StatsFactory.connection, statstype, cacheMatchIDsList)
-	    } else {
-          MatchIDMap(statstype) = mIds
-	    }
+      val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
+      val xmlData = XML.load(query)
+      assert(xmlData != Nil)
+      MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
+      val cacheMatchIDsList = MatchIDMap(statstype) filterNot ((for { m <- mIds } yield m) contains)
+      cacheMatchIDs(StatsFactory.connection, statstype, cacheMatchIDsList)
     }
 //    println("Matches: " + MatchIDMap(statstype).size)
     return MatchIDMap(statstype)
@@ -44,6 +40,8 @@ class PlayerStats(playerData: scala.xml.Node, fresh: Boolean = true) {
     //assert(matches.size == mids.size)
     return matches
   }
+  
+  def getPlayedMatchesCount(statstype: String): Int = getCachedMatchIDs(StatsFactory.connection, statstype).size
 
   def getPlayedHeros(statstype: String): List[PlayerHeroStats] = {
     val playedMatches = getPlayedMatches(statstype)
@@ -156,7 +154,7 @@ object PlayerStatsSql {
       val query = "SELECT xmlData FROM PlayerStats WHERE LOWER(nickname) = '" +
         nick.toLowerCase + "' AND id=(SELECT MAX(ID) FROM PlayerStats WHERE LOWER(nickname)='" + nick.toLowerCase + "')"
       val resList = SQLHelper.queryEach(conn, query) { rs =>
-        new PlayerStats(XML.loadString(rs.getString("xmlData")), false)
+        new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
       if (!resList.isEmpty) entries ::= resList.head
     }
@@ -169,7 +167,7 @@ object PlayerStatsSql {
       val query = "SELECT xmlData FROM PlayerStats WHERE aid=" +
         aid + " AND id=(SELECT MAX(ID) FROM PlayerStats WHERE aid='" + aid + "')";
       val resList = SQLHelper.queryEach(conn, query) { rs =>
-        new PlayerStats(XML.loadString(rs.getString("xmlData")), false)
+        new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
       if (!resList.isEmpty) entries ::= resList.head
     }

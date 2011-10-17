@@ -285,7 +285,7 @@ object HoNStats extends App {
       }
 
       val sortedHeros = playedHeros.sortWith((h1, h2) => sortHeroes(h1, h2))
-      val matches = player.getPlayedMatches(CommandMain.statstype)
+      val matches = player.getPlayedMatchesCount(CommandMain.statstype)
 
       outBuffer.append(player.attribute(PlayerAttr.NICKNAME))
       outBuffer.append('\n')
@@ -295,7 +295,7 @@ object HoNStats extends App {
         outBuffer.append("%-20s %3d %2d %4d %4d %4d %5.2f %2d %2d\n".format(
           HeroAttr.IDMap(hero.HeroID),
           hero.used,
-          ((hero.used.toFloat / matches.size.toFloat) * 100).toInt,
+          ((hero.used.toFloat / matches.toFloat) * 100).toInt,
           hero.kills,
           hero.deaths,
           hero.assists,
