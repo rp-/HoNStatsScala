@@ -127,7 +127,7 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.RANK_HEROASSISTS).toInt,
             p.attribute(PlayerAttr.RANK_WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
             p.attribute(PlayerAttr.RANK_DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
-            p.attribute(PlayerAttr.RANK_HEROKILLS).toFloat / p.attribute(PlayerAttr.RANK_DEATHS).toFloat, // KDR
+            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.RANK_HEROKILLS), p.attrAsInt(PlayerAttr.RANK_DEATHS)), // KDR
             p.gamesplayed(CommandMain.statstype), //MGP
             p.attribute(PlayerAttr.RANK_WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
@@ -145,7 +145,7 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.HEROASSISTS).toInt,
             p.attribute(PlayerAttr.WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
             p.attribute(PlayerAttr.DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
-            p.attribute(PlayerAttr.HEROKILLS).toFloat / p.attribute(PlayerAttr.DEATHS).toFloat, // KDR
+            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.HEROKILLS), p.attrAsInt(PlayerAttr.DEATHS)), // KDR
             p.gamesplayed(CommandMain.statstype), // GP
             p.attribute(PlayerAttr.WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
@@ -163,7 +163,7 @@ object HoNStats extends App {
             p.attribute(PlayerAttr.CS_HEROASSISTS).toInt,
             p.attribute(PlayerAttr.CS_WARDS).toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
             p.attribute(PlayerAttr.CS_DENIES).toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
-            p.attribute(PlayerAttr.CS_HEROKILLS).toFloat / p.attribute(PlayerAttr.CS_DEATHS).toFloat, // KDR
+            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.CS_HEROKILLS), p.attrAsInt(PlayerAttr.CS_DEATHS)), // KDR
             p.gamesplayed(CommandMain.statstype), // CGP
             p.attribute(PlayerAttr.CS_WINS).toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
@@ -277,10 +277,11 @@ object HoNStats extends App {
       def sortHeroes(h1: PlayerHeroStats, h2: PlayerHeroStats) : Boolean = {
         CommandPlayerHeroes.sortBy match {
           case "use" => return h1.used > h2.used
-          case "kdr" => return (h1.kills.toFloat / h1.deaths.toFloat) > (h2.kills.toFloat / h2.deaths.toFloat)
+          case "kdr" => return PlayerAttr.calcRatio(h1.kills, h1.deaths) > PlayerAttr.calcRatio(h2.kills, h2.deaths)
           case "k" => return h1.kills > h2.kills
           case "d" => return h1.deaths > h2.deaths
           case "a" => return h1.assists > h2.assists
+          case x => throw new RuntimeException("sort mode not supported.")
         }
       }
 
@@ -299,7 +300,7 @@ object HoNStats extends App {
           hero.kills,
           hero.deaths,
           hero.assists,
-          (hero.kills.toFloat / hero.deaths.toFloat),
+          PlayerAttr.calcRatio(hero.kills, hero.deaths),
           hero.wins,
           hero.loses)
         )

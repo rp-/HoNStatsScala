@@ -12,6 +12,14 @@ class PlayerStats(playerData: scala.xml.Node) {
     (playerData \ "stat").filter(attributeNameValueEquals(name)).text
   }
 
+  def attrAsInt(name: String): Int = {
+    return attribute(name).toInt
+  }
+
+  def attrAsFloat(name: String): Float = {
+    return attribute(name).toFloat
+  }
+
   def attributeNameValueEquals(value: String)(node: scala.xml.Node) = {
     (node \ "@name").toString == value
   }
@@ -40,7 +48,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     //assert(matches.size == mids.size)
     return matches
   }
-  
+
   def getPlayedMatchesCount(statstype: String): Int = getCachedMatchIDs(StatsFactory.connection, statstype).size
 
   def getPlayedHeros(statstype: String): List[PlayerHeroStats] = {
@@ -210,6 +218,13 @@ class PlayerHeroStats( heroID: Int ) {
 }
 
 object PlayerAttr {
+  def calcRatio( div: Int, divi: Int): Float = {
+    if(divi == 0)
+      return div
+
+    return div / divi
+  }
+
   val NICKNAME = "nickname";
   val GAMES_PLAYED = "acc_games_played";
   val WINS = "acc_wins";
