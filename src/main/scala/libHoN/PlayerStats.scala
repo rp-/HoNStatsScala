@@ -218,7 +218,7 @@ class PlayerHeroStats( heroID: Int ) {
 }
 
 object PlayerAttr {
-  def calcRatio( div: Int, divi: Int): Float = {
+  def calcRatio( div: Float, divi: Float): Float = {
     if(divi == 0)
       return div
 
