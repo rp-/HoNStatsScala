@@ -80,13 +80,13 @@ class PlayerStats(playerData: scala.xml.Node) {
    */
   def isCurrent(conn: java.sql.Connection): Boolean = {
     val query = "select count(*) as co FROM playerstats " +
-      "WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now') " +
-      "OR IFNULL(gamesplayed, 0) == ?;"
+      "WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now');"
     val ps = conn.prepareStatement(query)
     ps.setInt(1, getAID.toInt)
-    ps.setInt(2, gamesplayed("all"))
     val rs = ps.executeQuery()
-    return rs.getInt("co") > 0
+    val count = rs.getInt("co")
+    rs.close
+    return count > 0
   }
 
   def getCachedMatchIDs(conn: java.sql.Connection, statstype: String): List[Int] = {
