@@ -119,25 +119,25 @@ class PlayerStats(playerData: scala.xml.Node) {
   }
 
   def cacheEntry(conn: java.sql.Connection) = {
-    if (!isCurrent(conn)) {
-      val query = "INSERT INTO PLAYERSTATS ( aid, nickname, insertDate, gamesplayed, xmlData) VALUES ( ?, ?, DATETIME('NOW'), ?, ?);"
-      val ps = conn.prepareStatement(query)
-      ps.setInt(1, getAID.toInt)
-      ps.setString(2, attribute(PlayerAttr.NICKNAME))
-      ps.setInt(3, gamesplayed("all"))
-      ps.setString(4, playerData.toString)
+    //if (!isCurrent(conn)) {
+    val query = "INSERT INTO PLAYERSTATS ( aid, nickname, insertDate, gamesplayed, xmlData) VALUES ( ?, ?, DATETIME('NOW'), ?, ?);"
+    val ps = conn.prepareStatement(query)
+    ps.setInt(1, getAID.toInt)
+    ps.setString(2, attribute(PlayerAttr.NICKNAME))
+    ps.setInt(3, gamesplayed("all"))
+    ps.setString(4, playerData.toString)
 
-      try {
-        val inserts = ps.executeUpdate
-      } catch {
-        case see: java.sql.SQLSyntaxErrorException => {
-          Log.error("ERROR(" + getAID + ": " + query)
-        }
-        case x => {
-          Log.error("ERROR")
-        }
+    try {
+      val inserts = ps.executeUpdate
+    } catch {
+      case see: java.sql.SQLSyntaxErrorException => {
+        Log.error("ERROR(" + getAID + ": " + query)
+      }
+      case x => {
+        Log.error("ERROR")
       }
     }
+    //}
   }
 
   def gamesplayed(statstype: String): Int = {
