@@ -20,61 +20,70 @@ object StatsFactory extends Actor {
     SQLHelper.upgradeDB(connection)
   start
 
-  def getPlayerStatsByNickCached(nicks: List[String]): List[PlayerStats] = {
-    val cached = PlayerStatsSql.getEntries(connection, nicks)
-
-    val lowernicks = for { n <- nicks } yield n.toLowerCase
-    val fetchnicks = lowernicks filterNot ((for { c <- cached } yield c.attribute(PlayerAttr.NICKNAME).toLowerCase) contains)
-    return cached ::: getPlayerStatsByNick(fetchnicks)
-  }
-
-  def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
+  private def fetchPlayerByNick(nicks: List[String]): List[PlayerStats] = {
     if (nicks.isEmpty)
       return Nil
 
     val query = nicks.mkString("&nick[]=");
     val xmlData = XML.load(new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
-    if (xmlData.label == "error")
-      Nil
-    else {
-      val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
+    if (xmlData.label != "error") {
+      val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
 
       ret.foreach(p => p.cacheEntry(connection))
 
       if (nicks.length > 50)
-        ret ::: getPlayerStatsByNick(nicks.drop(50))
+        return ret.toList ::: fetchPlayerByNick(nicks.drop(50))
       else
-        ret
+        return ret.toList
     }
+    return Nil
   }
 
-  def getPlayerStatsByAidCached(aids: List[Int]): List[PlayerStats] = {
-    val cached = PlayerStatsSql.getEntriesByAID(connection, aids)
-
-    val fetchids = aids filterNot ((for { c <- cached } yield c.getAID.toInt) contains)
-    return cached ::: getPlayerStatsByAid(fetchids)
-  }
-
-  def getPlayerStatsByAid(aids: List[Int]): List[PlayerStats] = {
+  private def fetchPlayerByAID(aids: List[Int]): List[PlayerStats] = {
     if(aids.isEmpty)
       return Nil
 
     val query = aids.take(50).mkString("&aid[]=");
     val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=aid&aid[]=" + query)
 
-    if (xmlData.label == "error")
-      Nil
-    else {
-	    val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player)).toList;
+    if (xmlData.label != "error") {
+	    val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
 
 	    ret.foreach(p => p.cacheEntry(connection))
 
 	    if (aids.length > 50)
-	      ret ::: getPlayerStatsByAid(aids.drop(50))
+	      return ret.toList ::: fetchPlayerByAID(aids.drop(50))
 	    else
-	      ret
+	      return ret.toList
+    }
+    return Nil
+  }
+
+  def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
+    if(!CommandMain.fetch) {
+	    val cached = PlayerStatsSql.getEntries(connection, nicks)
+
+	    val cachedCurrent = for ( p <- cached if p.isCurrent(StatsFactory.connection)) yield p
+
+	    val lowernicks = for { n <- nicks } yield n.toLowerCase
+	    val fetchnicks = lowernicks filterNot ((for { c <- cachedCurrent } yield c.attribute(PlayerAttr.NICKNAME).toLowerCase) contains)
+	    return cachedCurrent ::: fetchPlayerByNick(fetchnicks)
     }
 
+    return fetchPlayerByNick(nicks)
+  }
+
+  def getPlayerStatsByAID(aids: List[Int]): List[PlayerStats] = {
+    if(!CommandMain.fetch) {
+	    val cached = PlayerStatsSql.getEntriesByAID(connection, aids)
+
+	    val cachedCurrent = for ( p <- cached if p.isCurrent(StatsFactory.connection)) yield p
+	    val cachedids = for { c <- cachedCurrent } yield c.getAID.toInt
+	    val fetchids = aids filterNot (cachedids contains)
+	    return cachedCurrent ::: fetchPlayerByAID(fetchids)
+    }
+
+    return fetchPlayerByAID(aids)
   }
 
   def getMatchStatsByMatchId(ids: List[Int]): List[MatchStats] = {

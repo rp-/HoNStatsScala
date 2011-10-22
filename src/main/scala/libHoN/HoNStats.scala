@@ -111,7 +111,7 @@ object HoNStats extends App {
   println(outBuffer)
 
   def outputPlayer(nicknames: List[String]) = {
-    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
+    val players = StatsFactory.getPlayerStatsByNick(nicknames)
 
     val sHdOutput = "%-10s %-5s %-5s %-4s %-4s %-3s %-4s  %-4s %4s %2s\n"
     val sPlOutput = "%-10s %-5d %4d/%4d/%4d %4.1f %4.1f %5.2f %4d %2.0f\n"
@@ -173,7 +173,7 @@ object HoNStats extends App {
   }
 
   def outputMatches(nicknames: List[String]) = {
-    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
+    val players = StatsFactory.getPlayerStatsByNick(nicknames)
 
     for (player <- players) {
       val showmatches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
@@ -217,11 +217,7 @@ object HoNStats extends App {
       outBuffer.append("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s\n".format(
           sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
 
-      val legionPlayers = if (CommandMain.fetch)
-          StatsFactory.getPlayerStatsByAid(game.getLegionPlayers)
-        else
-          StatsFactory.getPlayerStatsByAidCached(game.getLegionPlayers)
-
+      val legionPlayers = StatsFactory.getPlayerStatsByAID(game.getLegionPlayers)
       val legionStrings = for (player <- legionPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d  ".format(
             player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
@@ -236,10 +232,7 @@ object HoNStats extends App {
             if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
             game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
-      val hellPlayers = if (CommandMain.fetch)
-          StatsFactory.getPlayerStatsByAid(game.getHellbournePlayers)
-        else
-          StatsFactory.getPlayerStatsByAidCached(game.getHellbournePlayers)
+      val hellPlayers = StatsFactory.getPlayerStatsByAID(game.getHellbournePlayers)
       val hellStrings = for (player <- hellPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d\n".format(
           player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
@@ -269,7 +262,7 @@ object HoNStats extends App {
   }
 
   def outputPlayerHeroes(nicknames: List[String]) = {
-    val players = StatsFactory.getPlayerStatsByNickCached(nicknames)
+    val players = StatsFactory.getPlayerStatsByNick(nicknames)
 
     for (player <- players) {
       val playedHeros = player.getPlayedHeros(CommandMain.statstype)
