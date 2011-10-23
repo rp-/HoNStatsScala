@@ -50,7 +50,7 @@ object CommandPlayerHeroes {
 }
 
 object HoNStats extends App {
-  Log.level = Log.Level.INFO
+  Log.level = Log.Level.DEBUG
 
   lazy val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
   val outBuffer = new StringBuilder()
@@ -121,16 +121,16 @@ object HoNStats extends App {
         outBuffer.append(sHdOutput.format("Nick", "MMR", "K", "D", "A", "W/G", "CD", "KDR", "MGP", "W%"))
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
-            p.attribute(PlayerAttr.NICKNAME),
-            p.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
-            p.attrAsInt(PlayerAttr.RANK_HEROKILLS),
-            p.attrAsInt(PlayerAttr.RANK_DEATHS),
-            p.attrAsInt(PlayerAttr.RANK_HEROASSISTS),
-            p.attrAsFloat(PlayerAttr.RANK_WARDS) / p.gamesplayed(CommandMain.statstype), // Wards per game
-            p.attrAsFloat(PlayerAttr.RANK_DENIES) / p.gamesplayed(CommandMain.statstype), // Creep denies
-            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.RANK_HEROKILLS), p.attrAsInt(PlayerAttr.RANK_DEATHS)), // KDR
+            p.NickName,
+            p.RankedSR.toInt,
+            p.RankedKills,
+            p.RankedDeaths,
+            p.RankedAssists,
+            p.RankedWards.toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.RankedDenies.toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
+            PlayerAttr.calcRatio(p.RankedKills, p.RankedDeaths), // KDR
             p.gamesplayed(CommandMain.statstype), //MGP
-            p.attrAsFloat(PlayerAttr.RANK_WINS) / p.gamesplayed(CommandMain.statstype) * 100 // W%
+            p.RankedWins.toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
@@ -139,16 +139,16 @@ object HoNStats extends App {
 
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
-            p.attribute(PlayerAttr.NICKNAME),
-            p.attrAsFloat(PlayerAttr.SKILL).toInt,
-            p.attrAsInt(PlayerAttr.HEROKILLS),
-            p.attrAsInt(PlayerAttr.DEATHS),
-            p.attrAsInt(PlayerAttr.HEROASSISTS),
-            p.attrAsFloat(PlayerAttr.WARDS) / p.gamesplayed(CommandMain.statstype), // Wards per game
-            p.attrAsFloat(PlayerAttr.DENIES) / p.gamesplayed(CommandMain.statstype), // Creep denies
-            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.HEROKILLS), p.attrAsInt(PlayerAttr.DEATHS)), // KDR
+            p.NickName,
+            p.PublicSR.toInt,
+            p.PublicKills,
+            p.PublicDeaths,
+            p.PublicAssists,
+            p.PublicWards.toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.PublicDenies.toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
+            PlayerAttr.calcRatio(p.PublicKills, p.PublicDeaths), // KDR
             p.gamesplayed(CommandMain.statstype), // GP
-            p.attrAsFloat(PlayerAttr.WINS) / p.gamesplayed(CommandMain.statstype) * 100 // W%
+            p.PublicWins.toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
@@ -157,16 +157,16 @@ object HoNStats extends App {
 
         players.foreach(p =>
           outBuffer.append(sPlOutput.format(
-            p.attribute(PlayerAttr.NICKNAME),
-            p.attrAsFloat(PlayerAttr.CS_AMM_TEAM_RATING).toInt,
-            p.attrAsInt(PlayerAttr.CS_HEROKILLS),
-            p.attrAsInt(PlayerAttr.CS_DEATHS),
-            p.attrAsInt(PlayerAttr.CS_HEROASSISTS),
-            p.attrAsFloat(PlayerAttr.CS_WARDS) / p.gamesplayed(CommandMain.statstype), // Wards per game
-            p.attrAsFloat(PlayerAttr.CS_DENIES) / p.gamesplayed(CommandMain.statstype), // Creep denies
-            PlayerAttr.calcRatio(p.attrAsInt(PlayerAttr.CS_HEROKILLS), p.attrAsInt(PlayerAttr.CS_DEATHS)), // KDR
+            p.NickName,
+            p.CasualSR.toInt,
+            p.CasualKills,
+            p.CasualDeaths,
+            p.CasualAssists,
+            p.CasualWards.toFloat / p.gamesplayed(CommandMain.statstype), // Wards per game
+            p.CasualDenies.toFloat / p.gamesplayed(CommandMain.statstype), // Creep denies
+            PlayerAttr.calcRatio(p.CasualKills, p.CasualDeaths), // KDR
             p.gamesplayed(CommandMain.statstype), // CGP
-            p.attrAsFloat(PlayerAttr.CS_WINS) / p.gamesplayed(CommandMain.statstype) * 100 // W%
+            p.CasualWins.toFloat / p.gamesplayed(CommandMain.statstype) * 100 // W%
             )
           )
         )
@@ -179,7 +179,7 @@ object HoNStats extends App {
     for (player <- players) {
       val showmatches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
 
-      outBuffer.append(player.attribute(PlayerAttr.NICKNAME) + "\n")
+      outBuffer.append(player.NickName + "\n")
 
       outBuffer.append(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
         "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
@@ -222,7 +222,7 @@ object HoNStats extends App {
       val legionStrings = for (player <- legionPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d  ".format(
             player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
-            game.getPlayerMatchStat(player.getAID, "nickname"),
+            player.NickName,
             HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
             game.getPlayerMatchStatAsInt(player.getAID, "level"),
             game.getPlayerMatchStatAsInt(player.getAID, "herokills"),
@@ -237,7 +237,7 @@ object HoNStats extends App {
       val hellStrings = for (player <- hellPlayers) yield
         "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d\n".format(
           player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
-          game.getPlayerMatchStat(player.getAID, "nickname"),
+          player.NickName,
           HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
           game.getPlayerMatchStatAsInt(player.getAID, "level"),
           game.getPlayerMatchStatAsInt(player.getAID, "herokills"),

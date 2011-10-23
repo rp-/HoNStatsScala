@@ -183,6 +183,39 @@ class PlayerStats(playerData: scala.xml.Node) {
     }
   }
 
+  // most used values
+  lazy val NickName = attribute(PlayerAttr.NICKNAME)
+
+  // ranked
+  lazy val RankedSR = attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING)
+  lazy val RankedKills = attrAsInt(PlayerAttr.RANK_HEROKILLS)
+  lazy val RankedDeaths = attrAsInt(PlayerAttr.RANK_DEATHS)
+  lazy val RankedAssists = attrAsInt(PlayerAttr.RANK_HEROASSISTS)
+  lazy val RankedWards = attrAsInt(PlayerAttr.RANK_WARDS)
+  lazy val RankedDenies = attrAsInt(PlayerAttr.RANK_DENIES)
+  lazy val RankedWins = attrAsInt(PlayerAttr.RANK_WINS)
+  lazy val RankedLosses = attrAsInt(PlayerAttr.RANK_LOSSES)
+
+  // public
+  lazy val PublicSR = attrAsFloat(PlayerAttr.AMM_TEAM_RATING)
+  lazy val PublicKills = attrAsInt(PlayerAttr.HEROKILLS)
+  lazy val PublicDeaths = attrAsInt(PlayerAttr.DEATHS)
+  lazy val PublicAssists = attrAsInt(PlayerAttr.HEROASSISTS)
+  lazy val PublicWards = attrAsInt(PlayerAttr.WARDS)
+  lazy val PublicDenies = attrAsInt(PlayerAttr.DENIES)
+  lazy val PublicWins = attrAsInt(PlayerAttr.WINS)
+  lazy val PublicLosses = attrAsInt(PlayerAttr.LOSSES)
+
+  // casual
+  lazy val CasualSR = attrAsFloat(PlayerAttr.CS_AMM_TEAM_RATING)
+  lazy val CasualKills = attrAsInt(PlayerAttr.CS_HEROKILLS)
+  lazy val CasualDeaths = attrAsInt(PlayerAttr.CS_DEATHS)
+  lazy val CasualAssists = attrAsInt(PlayerAttr.CS_HEROASSISTS)
+  lazy val CasualWards = attrAsInt(PlayerAttr.CS_WARDS)
+  lazy val CasualDenies = attrAsInt(PlayerAttr.CS_DENIES)
+  lazy val CasualWins = attrAsInt(PlayerAttr.CS_WINS)
+  lazy val CasualLosses = attrAsInt(PlayerAttr.CS_LOSSES)
+
   override def toString = playerData.toString
 }
 
