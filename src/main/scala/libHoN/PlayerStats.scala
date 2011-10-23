@@ -27,7 +27,7 @@ class PlayerStats(playerData: scala.xml.Node) {
   lazy val getAID: String = playerData.attribute("aid").get.text;
 
   def getPlayedMatchIds(statstype: String) : List[Int] = {
-    val mIds = getCachedMatchIDs(StatsFactory.connection, statstype)
+    val mIds = getCachedMatchIDs(statstype)
 
     if(!MatchIDMap.contains(statstype) && !matchIDsCurrent(statstype)) {
       val query = StatsFactory.createXMLURL("?f=" + statstype + "_history&opt=aid&aid[]=" + getAID)
@@ -35,7 +35,7 @@ class PlayerStats(playerData: scala.xml.Node) {
       assert(xmlData != Nil)
       MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
       val cacheMatchIDsList = MatchIDMap(statstype) filterNot ((for { m <- mIds } yield m) contains)
-      cacheMatchIDs(StatsFactory.connection, statstype, cacheMatchIDsList)
+      cacheMatchIDs(statstype, cacheMatchIDsList)
     } else {
       MatchIDMap(statstype) = mIds
     }
@@ -51,7 +51,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     return matches
   }
 
-  def getPlayedMatchesCount(statstype: String): Int = getCachedMatchIDs(StatsFactory.connection, statstype).size
+  def getPlayedMatchesCount(statstype: String): Int = getCachedMatchIDs(statstype).size
 
   def getPlayedHeros(statstype: String): List[PlayerHeroStats] = {
     val playedMatches = getPlayedMatches(statstype)
@@ -80,10 +80,10 @@ class PlayerStats(playerData: scala.xml.Node) {
    * @param conn Connection to our database
    * @return True if the player is recent enough in the database.
    */
-  def isCurrent(conn: java.sql.Connection): Boolean = {
+  def isCurrent(): Boolean = {
     val query = "select count(*) as co FROM playerstats " +
       "WHERE aid=? and strftime('%s', insertDate, '+15 minute') > strftime('%s', 'now');"
-    val ps = conn.prepareStatement(query)
+    val ps = StatsFactory.connection.prepareStatement(query)
     ps.setInt(1, getAID.toInt)
     val rs = ps.executeQuery()
     val count = rs.getInt("co")
@@ -102,17 +102,17 @@ class PlayerStats(playerData: scala.xml.Node) {
     return count > 0
   }
 
-  def getCachedMatchIDs(conn: java.sql.Connection, statstype: String): List[Int] = {
+  def getCachedMatchIDs(statstype: String): List[Int] = {
     val query = "SELECT matchid FROM playermatches WHERE aid=" + getAID + " and statstype='" + statstype + "';"
-    val resList = SQLHelper.queryEach(conn, query) { rs =>
+    val resList = SQLHelper.queryEach(StatsFactory.connection, query) { rs =>
       rs.getInt("matchid")
     }
     return resList
   }
 
-  def cacheMatchIDs(conn: java.sql.Connection, statstype: String, ids: List[Int]) = {
+  def cacheMatchIDs(statstype: String, ids: List[Int]) = {
     val updQuery = "UPDATE players SET matchids%sUpdDate=DATETIME('NOW') WHERE aid=?;".format(statstype)
-    val updps = conn.prepareStatement(updQuery)
+    val updps = StatsFactory.connection.prepareStatement(updQuery)
     updps.setInt(1, getAID.toInt)
     try {
       updps.executeUpdate
@@ -123,7 +123,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     }
     for (id <- ids) {
       val query = "INSERT INTO playermatches ( aid, statstype, matchid ) VALUES ( ?, ?, ?);"
-      val ps = conn.prepareStatement(query)
+      val ps = StatsFactory.connection.prepareStatement(query)
       ps.setInt(1, getAID.toInt)
       ps.setString(2, statstype)
       ps.setInt(3, id)
@@ -138,12 +138,12 @@ class PlayerStats(playerData: scala.xml.Node) {
     }
   }
 
-  def cacheEntry(conn: java.sql.Connection) = {
+  def cacheEntry() = {
     //if (!isCurrent(conn)) {
-    val playerentries = PlayerStatsSql.getEntriesByAID(conn, List(getAID.toInt))
+    val playerentries = PlayerStatsSql.getEntriesByAID(List(getAID.toInt))
     if(playerentries.isEmpty) {
 	    val playerInsert = "INSERT INTO players ( aid, nickname ) VALUES ( ?, ?);"
-	    val psPlayer = conn.prepareStatement(playerInsert)
+	    val psPlayer = StatsFactory.connection.prepareStatement(playerInsert)
 	    psPlayer.setInt(1, getAID.toInt)
 	    psPlayer.setString(2, attribute(PlayerAttr.NICKNAME))
 	    try {
@@ -156,7 +156,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     }
 
     val query = "INSERT INTO PLAYERSTATS ( aid, insertDate, gamesplayed, xmlData) VALUES ( ?, DATETIME('NOW'), ?, ?);"
-    val ps = conn.prepareStatement(query)
+    val ps = StatsFactory.connection.prepareStatement(query)
     ps.setInt(1, getAID.toInt)
     ps.setInt(2, gamesplayed("all"))
     ps.setString(3, playerData.toString)
@@ -187,25 +187,25 @@ class PlayerStats(playerData: scala.xml.Node) {
 }
 
 object PlayerStatsSql {
-  def getEntries(conn: java.sql.Connection, nicks: List[String]): List[PlayerStats] = {
+  def getEntries(nicks: List[String]): List[PlayerStats] = {
     var entries: List[PlayerStats] = Nil
     for (nick <- nicks) {
       val query = "SELECT ps.xmlData FROM PlayerStats ps, players p WHERE p.aid=ps.aid AND LOWER(p.nickname) = '" +
         nick.toLowerCase + "' AND id=(SELECT MAX(ID) FROM PlayerStats ps2 WHERE ps2.aid=ps.aid)"
-      val resList = SQLHelper.queryEach(conn, query) { rs =>
+      val resList = SQLHelper.queryEach(StatsFactory.connection, query) { rs =>
         new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
       if (!resList.isEmpty) entries ::= resList.head
     }
-    entries.filter( p => p.isCurrent(conn) )
+    entries.filter( p => p.isCurrent )
   }
 
-  def getEntriesByAID(conn: java.sql.Connection, aids: List[Int]): List[PlayerStats] = {
+  def getEntriesByAID(aids: List[Int]): List[PlayerStats] = {
     var entries: List[PlayerStats] = Nil
     for (aid <- aids) {
       val query = "SELECT xmlData FROM PlayerStats ps WHERE aid=" +
         aid + " AND id=(SELECT MAX(ID) FROM PlayerStats ps2 WHERE ps.aid=ps2.aid)";
-      val resList = SQLHelper.queryEach(conn, query) { rs =>
+      val resList = SQLHelper.queryEach(StatsFactory.connection, query) { rs =>
         new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
       if (!resList.isEmpty) entries ::= resList.head

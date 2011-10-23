@@ -14,19 +14,19 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
   val emptyString = "<match />"
   val isEmpty = empty
 
-  def isCached(conn: java.sql.Connection) = {
+  def isCached() = {
     val query = "SELECT mid FROM MatchStats WHERE mid = " + MatchID
-    val s = conn.createStatement
+    val s = StatsFactory.connection.createStatement
     val rs = s.executeQuery(query)
     val cached = rs.next
     s.close
     cached
   }
 
-  def cacheEntry(conn: java.sql.Connection) = {
+  def cacheEntry() = {
     //if (!isCached(conn)) {
     val query = "INSERT OR REPLACE INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
-    val ps = conn.prepareStatement(query)
+    val ps = StatsFactory.connection.prepareStatement(query)
     ps.setInt(1, MatchID)
     ps.setString(2, matchData.toString)
     try {
@@ -153,10 +153,10 @@ object MatchPlayerAttr {
 
 object MatchStatsSql {
   val emptyString = "<match />"
-  def getEntries(conn: java.sql.Connection, mid: List[Int]) = {
+  def getEntries(mid: List[Int]) = {
     if (!mid.isEmpty) {
       val query = "SELECT mid, xmlData FROM MatchStats WHERE mid IN (" + mid.mkString(",") + ") ORDER BY mid"
-      SQLHelper.queryEach(conn, query) { rs =>
+      SQLHelper.queryEach(StatsFactory.connection, query) { rs =>
         new MatchStats(rs.getInt("mid"), rs.getString("xmlData"), rs.getString("xmlData") == emptyString)
       }
     } else

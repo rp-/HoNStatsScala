@@ -35,7 +35,7 @@ object StatsFactory extends Actor {
     if (xmlData.label != "error") {
       val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
 
-      ret.foreach(p => p.cacheEntry(connection))
+      ret.foreach(p => p.cacheEntry)
 
       if (nicks.length > 50)
         return ret.toList ::: fetchPlayerByNick(nicks.drop(50))
@@ -55,7 +55,7 @@ object StatsFactory extends Actor {
     if (xmlData.label != "error") {
 	    val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
 
-	    ret.foreach(p => p.cacheEntry(connection))
+	    ret.foreach(p => p.cacheEntry)
 
 	    if (aids.length > 50)
 	      return ret.toList ::: fetchPlayerByAID(aids.drop(50))
@@ -67,9 +67,9 @@ object StatsFactory extends Actor {
 
   def getPlayerStatsByNick(nicks: List[String]): List[PlayerStats] = {
     if(!CommandMain.fetch) {
-	    val cached = PlayerStatsSql.getEntries(connection, nicks)
+	    val cached = PlayerStatsSql.getEntries(nicks)
 
-	    val cachedCurrent = for ( p <- cached if p.isCurrent(StatsFactory.connection)) yield p
+	    val cachedCurrent = for ( p <- cached if p.isCurrent) yield p
 
 	    val lowernicks = for { n <- nicks } yield n.toLowerCase
 	    val fetchnicks = lowernicks filterNot ((for { c <- cachedCurrent } yield c.attribute(PlayerAttr.NICKNAME).toLowerCase) contains)
@@ -81,9 +81,9 @@ object StatsFactory extends Actor {
 
   def getPlayerStatsByAID(aids: List[Int]): List[PlayerStats] = {
     if(!CommandMain.fetch) {
-	    val cached = PlayerStatsSql.getEntriesByAID(connection, aids)
+	    val cached = PlayerStatsSql.getEntriesByAID(aids)
 
-	    val cachedCurrent = for ( p <- cached if p.isCurrent(StatsFactory.connection)) yield p
+	    val cachedCurrent = for ( p <- cached if p.isCurrent) yield p
 	    val cachedids = for { c <- cachedCurrent } yield c.getAID.toInt
 	    val fetchids = aids filterNot (cachedids contains)
 	    return cachedCurrent ::: fetchPlayerByAID(fetchids)
@@ -96,7 +96,7 @@ object StatsFactory extends Actor {
     if (ids.isEmpty)
       return Nil
 
-    val cached = if (CommandMain.fetch) Nil else MatchStatsSql.getEntries(connection, ids)
+    val cached = if (CommandMain.fetch) Nil else MatchStatsSql.getEntries(ids)
     val fetchids = ids filterNot ((for { c <- cached } yield c.getMatchID) contains)
 
     m_results = Nil
@@ -131,7 +131,7 @@ object StatsFactory extends Actor {
     val res = m_results
     //val parfetchids = fetchids.par
     //val res = parfetchids.map(id => fetchMachStats(id)).toList
-    res.foreach(m => m.cacheEntry(connection))
+    res.foreach(m => m.cacheEntry)
     val emptyless = res.filter( m => !m.isEmpty) ::: cached.filter( m => !m.isEmpty)
     return emptyless.sortWith((m1, m2) => (m1.getMatchID < m2.getMatchID))
   }
@@ -152,7 +152,7 @@ object StatsFactory extends Actor {
     val ret = (for { match_ <- (xmlData \ "stats" \ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList;
 
     assert(ret.size > 0)
-    ret.foreach(m => m.cacheEntry(connection))
+    ret.foreach(m => m.cacheEntry)
     return ret ::: fetchMatchStats(ids.drop(50))
   }
 
