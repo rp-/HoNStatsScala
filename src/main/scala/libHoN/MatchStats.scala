@@ -6,7 +6,6 @@ import oldsch00l.Log;
 
 class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
   require(MatchID.isValidInt)
-  Log.debug(matchData)
   override def toString = matchData.toString
   def getMatchID = this.MatchID
   lazy val xmlMatchData: scala.xml.Node = XML.loadString(matchData)
