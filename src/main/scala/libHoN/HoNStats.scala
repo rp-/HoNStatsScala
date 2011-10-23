@@ -108,7 +108,8 @@ object HoNStats extends App {
   }
 
   // finally print the output
-  println(outBuffer)
+  if(!outBuffer.isEmpty)
+    println(outBuffer)
 
   def outputPlayer(nicknames: List[String]) = {
     val players = StatsFactory.getPlayerStatsByNick(nicknames)
