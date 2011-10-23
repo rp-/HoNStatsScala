@@ -30,7 +30,7 @@ class PlayerStats(playerData: scala.xml.Node) {
     val mIds = getCachedMatchIDs(StatsFactory.connection, statstype)
 
     if( !MatchIDMap.contains(statstype) ) {
-      val query = StatsFactory.XMLRequester + "?f=" + statstype + "_history&opt=aid&aid[]=" + getAID
+      val query = StatsFactory.createXMLURL("?f=" + statstype + "_history&opt=aid&aid[]=" + getAID)
       val xmlData = XML.load(query)
       assert(xmlData != Nil)
       MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList

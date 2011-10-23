@@ -5,9 +5,15 @@ import scala.actors.Actor
 import scala.actors.Actor._
 import java.sql.{ Connection, DriverManager, ResultSet };
 import scala.actors.DaemonActor
+import oldsch00l.Log
 
 object StatsFactory extends Actor {
-  val XMLRequester : String = "http://xml.heroesofnewerth.com/xml_requester.php"
+  private val XMLRequester : String = "http://xml.heroesofnewerth.com/xml_requester.php"
+
+  def createXMLURL(site: String): String = {
+    Log.debug(XMLRequester + site)
+    return XMLRequester + site
+  }
 
   //load db driver and create tables
   Class.forName("org.sqlite.JDBC").newInstance
@@ -25,7 +31,7 @@ object StatsFactory extends Actor {
       return Nil
 
     val query = nicks.mkString("&nick[]=");
-    val xmlData = XML.load(new java.net.URL(XMLRequester + "?f=player_stats&opt=nick&nick[]=" + query))
+    val xmlData = XML.load(createXMLURL("?f=player_stats&opt=nick&nick[]=" + query))
     if (xmlData.label != "error") {
       val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
 
@@ -44,7 +50,7 @@ object StatsFactory extends Actor {
       return Nil
 
     val query = aids.take(50).mkString("&aid[]=");
-    val xmlData = XML.load(XMLRequester + "?f=player_stats&opt=aid&aid[]=" + query)
+    val xmlData = XML.load(createXMLURL("?f=player_stats&opt=aid&aid[]=" + query))
 
     if (xmlData.label != "error") {
 	    val ret = (for { player <- (xmlData \ "stats" \ "player_stats") } yield new PlayerStats(player));
@@ -111,7 +117,7 @@ object StatsFactory extends Actor {
       }
 
       for (ids <- createQueryList(fetchids)) {
-        workers(curWorker) ! QueryArgs(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + ids.mkString("&mid[]="), ids)
+        workers(curWorker) ! QueryArgs(createXMLURL("?f=match_stats&opt=mid&mid[]=" + ids.mkString("&mid[]=")), ids)
         curWorker += 1
         if (curWorker == workers.size)
           curWorker = 0
@@ -131,7 +137,7 @@ object StatsFactory extends Actor {
   }
 
   private def fetchMatchStats(id: Int): MatchStats = {
-    val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + id)
+    val xmlData = XML.load(createXMLURL("?f=match_stats&opt=mid&mid[]=" + id))
     val match_ = (xmlData \ "stats" \ "match")
     return new MatchStats((match_ \ "@mid").text.toInt, match_.toString);
   }
@@ -142,7 +148,7 @@ object StatsFactory extends Actor {
 
     val qids = ids.take(50)
     val query = qids.mkString("&mid[]=");
-    val xmlData = XML.load(XMLRequester + "?f=match_stats&opt=mid&mid[]=" + query)
+    val xmlData = XML.load(createXMLURL("?f=match_stats&opt=mid&mid[]=" + query))
     val ret = (for { match_ <- (xmlData \ "stats" \ "match") } yield new MatchStats((match_ \ "@mid").text.toInt, match_.toString)).toList;
 
     assert(ret.size > 0)
