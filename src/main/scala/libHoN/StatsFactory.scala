@@ -206,7 +206,7 @@ object StatsFactory extends Actor {
 }
 
 object SQLHelper {
-  val DBVERSION = 2
+  val DBVERSION = 3
 
   def using[Closeable <: { def close(): Unit }, B](closeable: Closeable)(getB: Closeable => B): B =
     try {
@@ -223,24 +223,31 @@ object SQLHelper {
          value TEXT
        );
        CREATE TABLE IF NOT EXISTS playerstats (
-		     ID INTEGER PRIMARY KEY AUTOINCREMENT,
-		     aid integer,
-		     nickname TEXT,
-		     insertDate TIMESTAMP,
+         ID INTEGER PRIMARY KEY AUTOINCREMENT,
+         aid INTEGER,
+         insertDate TIMESTAMP,
          gamesplayed INTEGER,
-		     xmlData TEXT
+         xmlData TEXT
 		   );
 		   CREATE TABLE IF NOT EXISTS playermatches (
 		     id INTEGER PRIMARY KEY AUTOINCREMENT,
 		     statstype TEXT,
 		     aid INTEGER,
 		     matchid integer
-		  );
-      CREATE TABLE IF NOT EXISTS matchstats (
+		   );
+       CREATE TABLE IF NOT EXISTS matchstats (
          mid integer primary key,
          xmlData TEXT
-      );
-      INSERT INTO dbmeta (key, value) VALUES ('version', '""" + DBVERSION + "');")
+       );
+       CREATE TABLE players (
+         aid INTEGER PRIMARY KEY,
+         nickname TEXT,
+         playerUpdDate TIMESTAMP,
+         matchidsrankedUpdDate TIMESTAMP,
+         matchidspublicUpdDate TIMESTAMP,
+         matchidscasualUpdDate TIMESTAMP
+       );
+       INSERT INTO dbmeta (key, value) VALUES ('version', '""" + DBVERSION + "');")
     query close
   }
 
@@ -271,6 +278,19 @@ object SQLHelper {
     if (dbversion <= 1) {
       val update = conn.createStatement
       update.executeUpdate("ALTER TABLE playerstats ADD COLUMN gamesplayed INTEGER;")
+      update.close
+    }
+    if (dbversion <= 2) {
+      val update = conn.createStatement
+      update.executeUpdate("CREATE TABLE players (" +
+          "aid INTEGER PRIMARY KEY, nickname TEXT, playerUpdDate TIMESTAMP, " +
+          "matchidsrankedUpdDate TIMESTAMP, matchidspublicUpdDate TIMESTAMP, matchidscasualUpdDate TIMESTAMP);")
+      update.executeUpdate("INSERT INTO players (aid, nickname) SELECT DISTINCT aid, nickname FROM playerstats;")
+      update.executeUpdate("CREATE TABLE tmp AS SELECT * FROM playerstats;")
+      update.executeUpdate("DROP TABLE playerstats;")
+      update.executeUpdate("CREATE TABLE IF NOT EXISTS playerstats (ID INTEGER PRIMARY KEY AUTOINCREMENT,aid INTEGER,insertDate TIMESTAMP,gamesplayed INTEGER,xmlData TEXT);")
+      update.executeUpdate("INSERT INTO playerstats SELECT id, aid, insertDate, gamesplayed, xmlData FROM tmp;")
+      update.executeUpdate("DROP TABLE tmp;")
       update.close
     }
 

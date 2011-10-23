@@ -29,13 +29,15 @@ class PlayerStats(playerData: scala.xml.Node) {
   def getPlayedMatchIds(statstype: String) : List[Int] = {
     val mIds = getCachedMatchIDs(StatsFactory.connection, statstype)
 
-    if( !MatchIDMap.contains(statstype) ) {
+    if(!MatchIDMap.contains(statstype) && !matchIDsCurrent(statstype)) {
       val query = StatsFactory.createXMLURL("?f=" + statstype + "_history&opt=aid&aid[]=" + getAID)
       val xmlData = XML.load(query)
       assert(xmlData != Nil)
       MatchIDMap(statstype) = (for { id <- (xmlData \\ "id") } yield id.text.toInt).toList
       val cacheMatchIDsList = MatchIDMap(statstype) filterNot ((for { m <- mIds } yield m) contains)
       cacheMatchIDs(StatsFactory.connection, statstype, cacheMatchIDsList)
+    } else {
+      MatchIDMap(statstype) = mIds
     }
 //    println("Matches: " + MatchIDMap(statstype).size)
     return MatchIDMap(statstype)
@@ -89,6 +91,17 @@ class PlayerStats(playerData: scala.xml.Node) {
     return count > 0
   }
 
+  def matchIDsCurrent(statstype: String): Boolean = {
+    val query = "select count(*) as co FROM players " +
+      "WHERE aid=? and strftime('%s', matchids" + statstype + "UpdDate, '+15 minute') > strftime('%s', 'now');"
+    val ps = StatsFactory.connection.prepareStatement(query)
+    ps.setInt(1, getAID.toInt)
+    val rs = ps.executeQuery
+    val count = rs.getInt("co")
+    rs.close
+    return count > 0
+  }
+
   def getCachedMatchIDs(conn: java.sql.Connection, statstype: String): List[Int] = {
     val query = "SELECT matchid FROM playermatches WHERE aid=" + getAID + " and statstype='" + statstype + "';"
     val resList = SQLHelper.queryEach(conn, query) { rs =>
@@ -98,21 +111,28 @@ class PlayerStats(playerData: scala.xml.Node) {
   }
 
   def cacheMatchIDs(conn: java.sql.Connection, statstype: String, ids: List[Int]) = {
-    for( id <- ids ) {
-      val query = "INSERT INTO PLAYERMATCHES ( aid, statstype, matchid ) VALUES ( ?, ?, ?);"
+    val updQuery = "UPDATE players SET matchids%sUpdDate=DATETIME('NOW') WHERE aid=?;".format(statstype)
+    val updps = conn.prepareStatement(updQuery)
+    updps.setInt(1, getAID.toInt)
+    try {
+      updps.executeUpdate
+    } catch {
+      case see: java.sql.SQLSyntaxErrorException => {
+        Log.error("ERROR(" + getAID + ": " + updQuery)
+      }
+    }
+    for (id <- ids) {
+      val query = "INSERT INTO playermatches ( aid, statstype, matchid ) VALUES ( ?, ?, ?);"
       val ps = conn.prepareStatement(query)
       ps.setInt(1, getAID.toInt)
       ps.setString(2, statstype)
       ps.setInt(3, id)
 
       try {
-        val inserts = ps.executeUpdate
+        ps.executeUpdate
       } catch {
         case see: java.sql.SQLSyntaxErrorException => {
           Log.error("ERROR(" + getAID + ": " + query)
-        }
-        case x => {
-          Log.error("ERROR")
         }
       }
     }
@@ -120,21 +140,32 @@ class PlayerStats(playerData: scala.xml.Node) {
 
   def cacheEntry(conn: java.sql.Connection) = {
     //if (!isCurrent(conn)) {
-    val query = "INSERT INTO PLAYERSTATS ( aid, nickname, insertDate, gamesplayed, xmlData) VALUES ( ?, ?, DATETIME('NOW'), ?, ?);"
+    val playerentries = PlayerStatsSql.getEntriesByAID(conn, List(getAID.toInt))
+    if(playerentries.isEmpty) {
+	    val playerInsert = "INSERT INTO players ( aid, nickname ) VALUES ( ?, ?);"
+	    val psPlayer = conn.prepareStatement(playerInsert)
+	    psPlayer.setInt(1, getAID.toInt)
+	    psPlayer.setString(2, attribute(PlayerAttr.NICKNAME))
+	    try {
+	      psPlayer.executeUpdate
+	    } catch {
+	      case see: java.sql.SQLSyntaxErrorException => {
+	        Log.error("ERROR(" + getAID + ": " + playerInsert)
+	      }
+	    }
+    }
+
+    val query = "INSERT INTO PLAYERSTATS ( aid, insertDate, gamesplayed, xmlData) VALUES ( ?, DATETIME('NOW'), ?, ?);"
     val ps = conn.prepareStatement(query)
     ps.setInt(1, getAID.toInt)
-    ps.setString(2, attribute(PlayerAttr.NICKNAME))
-    ps.setInt(3, gamesplayed("all"))
-    ps.setString(4, playerData.toString)
+    ps.setInt(2, gamesplayed("all"))
+    ps.setString(3, playerData.toString)
 
     try {
       val inserts = ps.executeUpdate
     } catch {
       case see: java.sql.SQLSyntaxErrorException => {
         Log.error("ERROR(" + getAID + ": " + query)
-      }
-      case x => {
-        Log.error("ERROR")
       }
     }
     //}
@@ -159,8 +190,8 @@ object PlayerStatsSql {
   def getEntries(conn: java.sql.Connection, nicks: List[String]): List[PlayerStats] = {
     var entries: List[PlayerStats] = Nil
     for (nick <- nicks) {
-      val query = "SELECT xmlData FROM PlayerStats WHERE LOWER(nickname) = '" +
-        nick.toLowerCase + "' AND id=(SELECT MAX(ID) FROM PlayerStats WHERE LOWER(nickname)='" + nick.toLowerCase + "')"
+      val query = "SELECT ps.xmlData FROM PlayerStats ps, players p WHERE p.aid=ps.aid AND LOWER(p.nickname) = '" +
+        nick.toLowerCase + "' AND id=(SELECT MAX(ID) FROM PlayerStats ps2 WHERE ps2.aid=ps.aid)"
       val resList = SQLHelper.queryEach(conn, query) { rs =>
         new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
@@ -172,8 +203,8 @@ object PlayerStatsSql {
   def getEntriesByAID(conn: java.sql.Connection, aids: List[Int]): List[PlayerStats] = {
     var entries: List[PlayerStats] = Nil
     for (aid <- aids) {
-      val query = "SELECT xmlData FROM PlayerStats WHERE aid=" +
-        aid + " AND id=(SELECT MAX(ID) FROM PlayerStats WHERE aid='" + aid + "')";
+      val query = "SELECT xmlData FROM PlayerStats ps WHERE aid=" +
+        aid + " AND id=(SELECT MAX(ID) FROM PlayerStats ps2 WHERE ps.aid=ps2.aid)";
       val resList = SQLHelper.queryEach(conn, query) { rs =>
         new PlayerStats(XML.loadString(rs.getString("xmlData")))
       }
