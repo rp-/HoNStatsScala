@@ -115,6 +115,7 @@ object HeroAttr {
     204 -> "Geomancer",
     205 -> "Midas",
     206 -> "Cthulhuphant",
-    207 -> "Monarch"
+    207 -> "Monarch",
+    208 -> "Gemini"
   )
 }
