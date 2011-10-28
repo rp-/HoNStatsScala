@@ -215,12 +215,12 @@ object HoNStats extends App {
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
       val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
 
-      outBuffer.append("%-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %3s %4s\n".format(
-          sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", "GPM", "GL2D"))
+      outBuffer.append("%-19s %-4s %2s %2s %2s %2s %3s %2s %2s %3s %4s  %-19s %-4s %2s %2s %2s %2s %3s %2s %2s %3s %4s\n".format(
+          sLegion, "Hero", "LV", "K", "D", "A", "CK", "CD", " W", "GPM", "GL2D", sHellbourne, "Hero", "LV", "K", "D", "A", "CK", "CD", " W", "GPM", "GL2D"))
 
       val legionPlayers = StatsFactory.getPlayerStatsByAID(game.getLegionPlayers)
       val legionStrings = for (player <- legionPlayers) yield
-        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d  ".format(
+        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %2d %3d %4d  ".format(
             player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
             player.NickName,
             HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
@@ -230,12 +230,13 @@ object HoNStats extends App {
             game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
             game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.TEAMCREEPKILLS) + game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.NEUTRALCREEPKILLS),
             game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
+            game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.WARDS),
             if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
             game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
       val hellPlayers = StatsFactory.getPlayerStatsByAID(game.getHellbournePlayers)
       val hellStrings = for (player <- hellPlayers) yield
-        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %3d %4d\n".format(
+        "%-4d %-14s %-4s %2d %2d %2d %2d %3d %2d %2d %3d %4d\n".format(
           player.attrAsFloat(PlayerAttr.RANK_AMM_TEAM_RATING).toInt,
           player.NickName,
           HeroAttr.getNick(game.getPlayerMatchStatAsInt(player.getAID, "hero_id")),
@@ -245,6 +246,7 @@ object HoNStats extends App {
           game.getPlayerMatchStatAsInt(player.getAID, "heroassists"),
           game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.TEAMCREEPKILLS) + game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.NEUTRALCREEPKILLS),
           game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.DENIES),
+          game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.WARDS),
           if (game_mins > 0) game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0,
           game.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLDLOST2DEATH))
 
