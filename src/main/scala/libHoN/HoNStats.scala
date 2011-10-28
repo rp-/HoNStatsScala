@@ -179,7 +179,10 @@ object HoNStats extends App {
     for (player <- players) {
       val showmatches = player.getPlayedMatches(CommandMain.statstype, CommandMain.limit)
 
-      outBuffer.append(player.NickName + "\n")
+      outBuffer.append(player.NickName)
+      outBuffer.append(" (")
+      outBuffer.append(CommandMain.statstype)
+      outBuffer.append(")\n")
 
       outBuffer.append(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
         "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
@@ -287,8 +290,10 @@ object HoNStats extends App {
       val matches = player.getPlayedMatchesCount(CommandMain.statstype)
       val sortedHeros = playedHeros.sortWith((h1, h2) => sortHeroes(h1, h2))
 
-      outBuffer.append(player.attribute(PlayerAttr.NICKNAME))
-      outBuffer.append('\n')
+      outBuffer.append(player.NickName)
+      outBuffer.append(" (")
+      outBuffer.append(CommandMain.statstype)
+      outBuffer.append(")\n")
       outBuffer.append("%-20s %-3s %-2s %3s  %3s  %3s    %-3s %-2s %-2s %5s %5s %5s\n".
         format("Hero", "Use", " %", "K", "D", "A", "KDR", " W", " L", "  KPG", "  DPG", "  APG"))
       for (hero <- if (CommandMain.limit > 0) sortedHeros.take(CommandMain.limit) else sortedHeros) {
