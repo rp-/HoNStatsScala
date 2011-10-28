@@ -50,7 +50,7 @@ object CommandPlayerHeroes {
 }
 
 object HoNStats extends App {
-  Log.level = Log.Level.DEBUG
+  Log.level = Log.Level.WARNING
 
   lazy val dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
   val outBuffer = new StringBuilder()
