@@ -184,14 +184,15 @@ object HoNStats extends App {
       outBuffer.append(CommandMain.statstype)
       outBuffer.append(")\n")
 
-      outBuffer.append(" %-9s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
-        "MID", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
+      outBuffer.append(" %-9s %2s %-5s %-16s  %2s %2s %2s  %4s %s %s %3s/%2s %s\n".format(
+        "MID", "GT", "GD", "Date", "K", "D", "A", "Hero", "W/L", "Wards", "CK", "CD", "GPM"))
       for (outmatch <- showmatches.reverse) {
         Log.debug(outmatch.getMatchID.toString)
         val game_mins: Int = outmatch.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
         val gpm = if (game_mins > 0) outmatch.getPlayerMatchStatAsInt(player.getAID, MatchPlayerAttr.GOLD) / game_mins else 0
-        outBuffer.append(" %-9d %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d\n".format(
+        outBuffer.append(" %-9d %2s %5s %-16s  %2d/%2d/%2d  %-4s %-3s %5s %3d/%2d %3d\n".format(
           outmatch.getMatchID,
+          outmatch.gametype,
           outmatch.getGameDuration,
           dateFormat.format(outmatch.getLocalMatchDateTime),
           outmatch.getPlayerMatchStatAsInt(player.getAID, "herokills"),
@@ -211,7 +212,7 @@ object HoNStats extends App {
     val matches = StatsFactory.getMatchStatsByMatchId(for(matchid <- matchids) yield matchid.toInt)
 
     for (game <- matches) {
-      outBuffer.append("Match %d -- %s - GD: %s\n".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
+      outBuffer.append("Match %d -- %s - GD: %s - GT: %s\n".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration, game.gametype))
 
       val winTeam = game.winningTeam
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"

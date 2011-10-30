@@ -127,6 +127,19 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
 
     "%d:%02d".format((time / 60).toInt, (time % 60))
   }
+
+  lazy val gametype: String = {
+    if(getMatchStatAsInt(MatchAttr.SINGLE_DRAFT) > 0)
+      MatchAttr.SINGLE_DRAFT
+    else if(getMatchStatAsInt(MatchAttr.BANNING_DRAFT) > 0)
+      MatchAttr.BANNING_DRAFT
+    else if(getMatchStatAsInt(MatchAttr.BANNING_PICK) > 0)
+      MatchAttr.BANNING_PICK
+    else if(getMatchStatAsInt(MatchAttr.ALL_PICK) > 0)
+      MatchAttr.ALL_PICK
+    else
+      MatchAttr.ALL_RANDOM
+  }
 }
 
 object MatchAttr {
