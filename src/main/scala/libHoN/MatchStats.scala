@@ -74,7 +74,7 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
   }
 
   val dfm = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z")
-  def getLocalMatchDateTime(): java.util.Date = {
+  lazy val getLocalMatchDateTime: java.util.Date = {
     if (getMatchStat(MatchAttr.MATCH_DATETIME).isEmpty)
       new java.util.Date()
     else
@@ -92,7 +92,7 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
   }
 
   def playerWon(aid: String): Boolean = {
-    getPlayerMatchStat(aid, "team").toInt == getWinningTeam()
+    getPlayerMatchStat(aid, "team").toInt == winningTeam
   }
 
   def getTeamStat(side: String, stat: String): String = {
@@ -107,7 +107,7 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
     }
   }
 
-  def getWinningTeam(): Int = {
+  lazy val winningTeam: Int = {
     val teams = (xmlMatchData \ "team")
     if(!teams.isEmpty) {
       val winning = for { team <- (xmlMatchData \ "team") } yield (team \ "stat").filter(s => s.attribute("name").get.head.text == "tm_wins")
@@ -122,7 +122,7 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
     }
   }
 
-  def getGameDuration(): String = {
+  lazy val getGameDuration: String = {
     val time = getMatchStatAsInt(MatchAttr.TIME_PLAYED)
 
     "%d:%02d".format((time / 60).toInt, (time % 60))

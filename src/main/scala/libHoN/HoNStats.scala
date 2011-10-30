@@ -213,7 +213,7 @@ object HoNStats extends App {
     for (game <- matches) {
       outBuffer.append("Match %d -- %s - GD: %s\n".format(game.getMatchID, dateFormat.format(game.getLocalMatchDateTime), game.getGameDuration()))
 
-      val winTeam = game.getWinningTeam()
+      val winTeam = game.winningTeam
       val sLegion = if(winTeam == 1) "Legion(W)" else "Legion"
       val sHellbourne = if(winTeam == 2) "Hellbourne(W)" else "Hellbourne"
       val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
