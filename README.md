@@ -20,29 +20,28 @@ You can execute this file with java like:
 ## Usage
 
     Usage: HoNStats [options] [command] [command options]
-    Options:
+      Options:
         -d, --debug       Show debug output
                           Default: false
         -f, --fetch       Don't use cache
-                      Default: false
+                          Default: false
         -l, --limit       Maximum output of items
-                      Default: 5
+                          Default: 5
+        -q, --quiet       Tries to minimize output lines for errors/warnings
+                          Default: false
         -s, --statstype   StatsType to show: [ranked,public,casual]
-                      Default: ranked
-    Commands:
+                          Default: ranked
+      Commands:
         player      Show player stats
           Usage: player [options] Nicknames to show stats
-
         matches      Show matches of player
           Usage: matches [options] Nicknames
-
         match      Show stats for a match
           Usage: match [options] Matchid's to show matches
-
         player-heroes      Show played heroes for a player
           Usage: player-heroes [options] Nicknames
-            Options:
-              -b, --sort-by   Sort by [use,kdr,k,d,a]
+      Options:
+              -b, --sort-by   Sort by [use,kdr,k,d,a,kpg,dpg,apg]
                               Default: use
 
 ## Example output
