@@ -20,6 +20,9 @@ object CommandMain {
 
   @Parameter(names = Array("-q", "--quiet"), description = "Tries to minimize output lines for errors/warnings")
   var quiet: Boolean = false
+
+  @Parameter(names = Array("-o", "--order"), description = "Switch the sort order")
+  var switchOrder: Boolean = false
 }
 
 @Parameters(separators = "=", commandDescription = "Show player stats")
@@ -289,7 +292,11 @@ object HoNStats extends App {
       }
 
       val matches = player.getPlayedMatchesCount(CommandMain.statstype)
-      val sortedHeros = playedHeros.sortWith((h1, h2) => sortHeroes(h1, h2))
+      val sortedHeros =
+        if( CommandMain.switchOrder )
+          playedHeros.sortWith((h1, h2) => !sortHeroes(h1, h2))
+        else
+          playedHeros.sortWith((h1, h2) => sortHeroes(h1, h2))
 
       outBuffer.append(player.NickName)
       outBuffer.append(" (")
