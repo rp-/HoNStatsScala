@@ -279,14 +279,14 @@ object HoNStats extends App {
 
       def sortHeroes(h1: PlayerHeroStats, h2: PlayerHeroStats) : Boolean = {
         CommandPlayerHeroes.sortBy match {
-          case "use" => return h1.used > h2.used
-          case "kdr" => return PlayerAttr.calcRatio(h1.kills, h1.deaths) > PlayerAttr.calcRatio(h2.kills, h2.deaths)
-          case "k" => return h1.kills > h2.kills
-          case "d" => return h1.deaths > h2.deaths
-          case "a" => return h1.assists > h2.assists
-          case "kpg" => return PlayerAttr.calcRatio(h1.kills, h1.used) > PlayerAttr.calcRatio(h2.kills, h2.used)
-          case "dpg" => return PlayerAttr.calcRatio(h1.deaths, h1.used) > PlayerAttr.calcRatio(h2.deaths, h2.used)
-          case "apg" => return PlayerAttr.calcRatio(h1.assists, h1.used) > PlayerAttr.calcRatio(h2.assists, h2.used)
+          case "use" => return h1.used >= h2.used
+          case "kdr" => return PlayerAttr.calcRatio(h1.kills, h1.deaths) >= PlayerAttr.calcRatio(h2.kills, h2.deaths)
+          case "k" => return h1.kills >= h2.kills
+          case "d" => return h1.deaths >= h2.deaths
+          case "a" => return h1.assists >= h2.assists
+          case "kpg" => return PlayerAttr.calcRatio(h1.kills, h1.used) >= PlayerAttr.calcRatio(h2.kills, h2.used)
+          case "dpg" => return PlayerAttr.calcRatio(h1.deaths, h1.used) >= PlayerAttr.calcRatio(h2.deaths, h2.used)
+          case "apg" => return PlayerAttr.calcRatio(h1.assists, h1.used) >= PlayerAttr.calcRatio(h2.assists, h2.used)
           case x => throw new RuntimeException("sort mode not supported.")
         }
       }
