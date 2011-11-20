@@ -287,6 +287,7 @@ object HoNStats extends App {
           case "kpg" => return PlayerAttr.calcRatio(h1.kills, h1.used) >= PlayerAttr.calcRatio(h2.kills, h2.used)
           case "dpg" => return PlayerAttr.calcRatio(h1.deaths, h1.used) >= PlayerAttr.calcRatio(h2.deaths, h2.used)
           case "apg" => return PlayerAttr.calcRatio(h1.assists, h1.used) >= PlayerAttr.calcRatio(h2.assists, h2.used)
+          case "gpm" => return h1.gpm >= h2.gpm
           case x => throw new RuntimeException("sort mode not supported.")
         }
       }
@@ -302,10 +303,10 @@ object HoNStats extends App {
       outBuffer.append(" (")
       outBuffer.append(CommandMain.statstype)
       outBuffer.append(")\n")
-      outBuffer.append("%-20s %-3s %-2s %3s  %3s  %3s    %-3s %-2s %-2s %5s %5s %5s\n".
-        format("Hero", "Use", " %", "K", "D", "A", "KDR", " W", " L", "  KPG", "  DPG", "  APG"))
+      outBuffer.append("%-20s %-3s %-2s %3s  %3s  %3s    %-3s %-2s %-2s %5s %5s %5s %3s %4s\n".
+        format("Hero", "Use", " %", "K", "D", "A", "KDR", " W", " L", "  KPG", "  DPG", "  APG", "GPM", "   W"))
       for (hero <- if (CommandMain.limit > 0) sortedHeros.take(CommandMain.limit) else sortedHeros) {
-        outBuffer.append("%-20s %3d %2d %4d %4d %4d %5.2f %2d %2d %5.2f %5.2f %5.2f\n".format(
+        outBuffer.append("%-20s %3d %2d %4d %4d %4d %5.2f %2d %2d %5.2f %5.2f %5.2f %3d %4.1f\n".format(
           HeroAttr.IDMap(hero.HeroID),
           hero.used,
           ((hero.used.toFloat / matches.toFloat) * 100).toInt,
@@ -317,7 +318,9 @@ object HoNStats extends App {
           hero.loses,
           PlayerAttr.calcRatio(hero.kills, hero.used),
           PlayerAttr.calcRatio(hero.deaths, hero.used),
-          PlayerAttr.calcRatio(hero.assists, hero.used))
+          PlayerAttr.calcRatio(hero.assists, hero.used),
+          hero.gpm,
+          (hero.wards / hero.used.toFloat))
         )
       }
     }

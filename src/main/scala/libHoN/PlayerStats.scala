@@ -68,6 +68,12 @@ class PlayerStats(playerData: scala.xml.Node) {
       playedHeros(heroID).incKills(game.getPlayerMatchStatAsInt(getAID, "herokills"))
       playedHeros(heroID).incDeaths(game.getPlayerMatchStatAsInt(getAID, "deaths"))
       playedHeros(heroID).incAssists(game.getPlayerMatchStatAsInt(getAID, "heroassists"))
+      val game_mins: Int = game.getMatchStatAsInt(MatchAttr.TIME_PLAYED) / 60
+      val gold: Int = game.getPlayerMatchStatAsInt(getAID, MatchPlayerAttr.GOLD)
+      if (game_mins > 0 && gold > 0) {
+        playedHeros(heroID).incGPM(gold / game_mins)
+      }
+      playedHeros(heroID).incWards(game.getPlayerMatchStatAsInt(getAID, "wards"))
       playedHeros(heroID).addWinLose(game.playerWon(getAID))
     }
 //    println("played: " + count)
@@ -254,6 +260,8 @@ class PlayerHeroStats( heroID: Int ) {
   var assists: Int = 0
   var wins: Int = 0
   var loses: Int = 0
+  var gpm: Int = 0
+  var wards: Int = 0
 
   val HeroID = heroID
 
@@ -271,6 +279,16 @@ class PlayerHeroStats( heroID: Int ) {
 
   def incAssists(moreAssists: Int) = {
     assists += moreAssists
+  }
+
+  def incGPM(moreGPM: Int) = {
+    gpm += moreGPM
+    if(gpm - moreGPM != 0)
+      gpm /= 2
+  }
+
+  def incWards(moreWards: Int) = {
+    wards += moreWards
   }
 
   def addWinLose(winLose: Boolean) = {
