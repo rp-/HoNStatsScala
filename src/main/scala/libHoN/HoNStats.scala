@@ -288,6 +288,7 @@ object HoNStats extends App {
           case "dpg" => return PlayerAttr.calcRatio(h1.deaths, h1.used) >= PlayerAttr.calcRatio(h2.deaths, h2.used)
           case "apg" => return PlayerAttr.calcRatio(h1.assists, h1.used) >= PlayerAttr.calcRatio(h2.assists, h2.used)
           case "gpm" => return h1.gpm >= h2.gpm
+          case "w" => return (h1.wards / h1.used.toFloat) >= (h2.wards / h2.used.toFloat)
           case x => throw new RuntimeException("sort mode not supported.")
         }
       }
