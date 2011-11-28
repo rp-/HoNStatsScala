@@ -19,6 +19,7 @@ object HeroAttr {
       case 104 => "Hag"
       case 109 => "SR"
       case 121 => "FA"
+      case 209 => "Salf"
       case x => IDMap.getOrElse(x, hid + "|Unknown").substring(0, 4)
     }
   }
@@ -116,6 +117,7 @@ object HeroAttr {
     205 -> "Midas",
     206 -> "Cthulhuphant",
     207 -> "Monarch",
-    208 -> "Gemini"
+    208 -> "Gemini",
+    209 -> "Lord Salforis"
   )
 }
