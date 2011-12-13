@@ -24,18 +24,21 @@ class MatchStats(MatchID: Int, matchData: String, empty: Boolean = false) {
 
   def cacheEntry() = {
     //if (!isCached(conn)) {
-    val query = "INSERT OR REPLACE INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
-    val ps = StatsFactory.connection.prepareStatement(query)
-    ps.setInt(1, MatchID)
-    ps.setString(2, matchData.toString)
-    try {
-      ps.executeUpdate
-    } catch {
-      case see: java.sql.SQLSyntaxErrorException => {
-        println("ERROR(" + MatchID + ": " + query)
-      }
-    }
-    ps.close
+	if (matchData.toString != MatchStatsSql.emptyString)
+	{
+		val query = "INSERT OR REPLACE INTO MatchStats ( mid, xmlData) VALUES ( ?, ?)"
+		val ps = StatsFactory.connection.prepareStatement(query)
+		ps.setInt(1, MatchID)
+		ps.setString(2, matchData.toString)
+		try {
+		  ps.executeUpdate
+		} catch {
+		  case see: java.sql.SQLSyntaxErrorException => {
+			println("ERROR(" + MatchID + ": " + query)
+		  }
+		}
+		ps.close
+	}
     //}
   }
 
