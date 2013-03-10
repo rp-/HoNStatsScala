@@ -1,3 +1,9 @@
+# DEPRICATED
+
+HoNStats written in scala is depricated, it is based on the xml api from HoN,
+that doesn't exist anymore.
+For a working commandline tool refer to the new honstats written in python.
+
 # HoNStats
 
 HoNStats is a console application written in Scala and
